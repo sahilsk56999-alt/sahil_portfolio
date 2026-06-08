@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>S Full Stack Developer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --neon:#00f5ff;--neon2:#ff00aa;--neon3:#7b2fff;
+  --dark:#04080f;--card:#0a1020;--glass:rgba(0,245,255,0.04);
+  --glow:0 0 24px rgba(0,245,255,0.45);--glow2:0 0 24px rgba(255,0,170,0.45);
+  --border:rgba(0,245,255,0.15);
+}
+html{scroll-behavior:smooth}
+body{background:var(--dark);color:#d0e8ff;font-family:'Exo 2',sans-serif;overflow-x:hidden}
+canvas#bg{position:fixed;top:0;left:0;z-index:0;opacity:0.55;pointer-events:none}
+.page{display:none;position:relative;z-index:1;min-height:100vh}
+.page.active{display:block}
+
+/* NAV */
+nav{display:flex;justify-content:space-between;align-items:center;padding:1rem 3rem;border-bottom:1px solid var(--border);backdrop-filter:blur(20px);background:rgba(4,8,15,0.85);position:sticky;top:0;z-index:200}
+.logo{font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--neon);letter-spacing:3px;text-shadow:var(--glow);cursor:pointer}
+.logo span{color:var(--neon2)}
+.nav-links{display:flex;gap:0.2rem;flex-wrap:wrap}
+.nav-btn{background:transparent;border:none;color:#8892b0;font-family:'Exo 2',sans-serif;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;padding:0.5rem 0.9rem;cursor:pointer;border-radius:4px;transition:all 0.3s;position:relative}
+.nav-btn::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:0;height:1px;background:var(--neon);transition:width 0.3s}
+.nav-btn:hover,.nav-btn.active-nav{color:var(--neon)}
+.nav-btn.active-nav::after,.nav-btn:hover::after{width:80%}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px}
+.hamburger span{display:block;width:24px;height:2px;background:var(--neon);transition:all 0.3s}
+
+/* HERO */
+.hero{min-height:92vh;display:flex;align-items:center;padding:4rem 3rem;gap:3rem;flex-wrap:wrap}
+.hero-text{flex:1;min-width:280px}
+.badge{display:inline-block;background:rgba(0,245,255,0.08);border:1px solid var(--border);color:var(--neon);font-size:0.75rem;letter-spacing:3px;padding:0.4rem 1rem;border-radius:30px;margin-bottom:1.5rem;text-transform:uppercase}
+.hero-name{font-family:'Orbitron',monospace;font-size:clamp(2rem,5vw,4.5rem);font-weight:900;line-height:1.1;margin-bottom:1rem}
+.hero-name .s{color:var(--neon);text-shadow:var(--glow);display:inline-block;animation:pulse 2s infinite}
+.hero-role{font-size:1.2rem;color:#8892b0;margin-bottom:1.5rem;min-height:2rem}
+.typing-text{color:var(--neon2);border-right:2px solid var(--neon2);animation:blink 0.7s infinite}
+.hero-desc{color:#566a8a;line-height:1.9;margin-bottom:2.5rem;max-width:500px}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
+.btn{padding:0.75rem 1.8rem;font-family:'Exo 2',sans-serif;font-size:0.9rem;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:6px;transition:all 0.3s;border:none;font-weight:600}
+.btn-glow{background:transparent;border:1px solid var(--neon);color:var(--neon);box-shadow:0 0 12px rgba(0,245,255,0.15)}
+.btn-glow:hover{background:rgba(0,245,255,0.1);box-shadow:var(--glow);transform:translateY(-3px)}
+.btn-pink{background:linear-gradient(135deg,var(--neon2),var(--neon3));color:#fff;box-shadow:0 4px 20px rgba(255,0,170,0.3)}
+.btn-pink:hover{transform:translateY(-3px);box-shadow:var(--glow2)}
+
+/* 3D CUBE */
+.hero-visual{flex:0 0 320px;display:flex;flex-direction:column;align-items:center;gap:2rem}
+.cube-wrap{perspective:700px;width:180px;height:180px}
+.cube{width:180px;height:180px;transform-style:preserve-3d;animation:rotateCube 14s infinite linear;position:relative}
+.face{position:absolute;width:180px;height:180px;border:1px solid rgba(0,245,255,0.35);background:rgba(0,245,255,0.03);display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:0.7rem;letter-spacing:2px;color:var(--neon);backdrop-filter:blur(2px)}
+.face-front{transform:translateZ(90px)}
+.face-back{transform:rotateY(180deg) translateZ(90px)}
+.face-left{transform:rotateY(-90deg) translateZ(90px)}
+.face-right{transform:rotateY(90deg) translateZ(90px)}
+.face-top{transform:rotateX(90deg) translateZ(90px)}
+.face-bottom{transform:rotateX(-90deg) translateZ(90px)}
+.orbit-tags{display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;max-width:300px}
+.orbit-tag{background:rgba(123,47,255,0.1);border:1px solid rgba(123,47,255,0.3);color:#b89eff;font-size:0.72rem;padding:4px 12px;border-radius:20px;letter-spacing:1px}
+
+/* SECTION */
+.section{padding:5rem 3rem;max-width:1200px;margin:0 auto}
+.sec-title{font-family:'Orbitron',monospace;font-size:1.8rem;color:var(--neon);text-shadow:var(--glow);margin-bottom:0.4rem;letter-spacing:2px}
+.sec-sub{color:#2d4a6a;font-size:0.8rem;letter-spacing:3px;text-transform:uppercase;margin-bottom:3rem}
+.divider{width:60px;height:2px;background:linear-gradient(90deg,var(--neon),var(--neon2));margin:1rem 0 3rem;border-radius:2px}
+
+/* SERVICES */
+.services-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem}
+.service-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;transition:all 0.3s;position:relative;overflow:hidden;cursor:pointer}
+.service-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--neon),var(--neon2));transform:scaleX(0);transition:transform 0.4s;transform-origin:left}
+.service-card:hover::before{transform:scaleX(1)}
+.service-card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-6px);box-shadow:0 20px 40px rgba(0,0,0,0.4)}
+.service-icon{font-size:2.5rem;margin-bottom:1rem}
+.service-title{font-family:'Orbitron',monospace;font-size:0.95rem;color:#ccd6f6;margin-bottom:0.8rem;letter-spacing:1px}
+.service-desc{color:#566a8a;font-size:0.9rem;line-height:1.7}
+.service-price{display:inline-block;margin-top:1rem;background:rgba(0,245,255,0.06);border:1px solid var(--border);color:var(--neon);font-size:0.8rem;padding:4px 12px;border-radius:4px;letter-spacing:1px}
+
+/* SKILLS */
+.skills-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem}
+.skill-card{background:var(--glass);border:1px solid var(--border);border-radius:8px;padding:1.2rem;text-align:center;transition:all 0.3s}
+.skill-card:hover{border-color:var(--neon);transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,245,255,0.12)}
+.skill-icon{font-size:2rem;margin-bottom:0.5rem}
+.skill-name{font-size:0.82rem;color:#ccd6f6;font-weight:600;letter-spacing:1px}
+.skill-bar{height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:0.7rem;overflow:hidden}
+.skill-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--neon),var(--neon2))}
+
+/* PROJECTS */
+.projects-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.5rem}
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:all 0.3s}
+.proj-card:hover{border-color:rgba(0,245,255,0.3);transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,0.5)}
+.proj-header{height:140px;display:flex;align-items:center;justify-content:center;font-size:3rem;position:relative;overflow:hidden}
+.proj-header::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,245,255,0.08),rgba(255,0,170,0.05))}
+.proj-body{padding:1.5rem}
+.proj-num{font-family:'Orbitron',monospace;font-size:2.5rem;color:rgba(0,245,255,0.06);font-weight:900;line-height:1}
+.proj-title{font-family:'Orbitron',monospace;font-size:0.95rem;color:#ccd6f6;margin-bottom:0.7rem;letter-spacing:1px}
+.proj-desc{color:#566a8a;font-size:0.88rem;line-height:1.7;margin-bottom:1rem}
+.proj-tags{display:flex;flex-wrap:wrap;gap:0.4rem}
+.tag{background:rgba(0,245,255,0.06);border:1px solid rgba(0,245,255,0.18);color:var(--neon);font-size:0.7rem;padding:3px 9px;border-radius:20px;letter-spacing:1px}
+.proj-btn{margin-top:1rem;background:transparent;border:1px solid var(--border);color:#8892b0;font-family:'Exo 2',sans-serif;font-size:0.8rem;letter-spacing:2px;padding:6px 16px;border-radius:4px;cursor:pointer;transition:all 0.3s;text-transform:uppercase}
+.proj-btn:hover{border-color:var(--neon);color:var(--neon)}
+
+/* STATS */
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem;margin-top:3rem}
+.stat{text-align:center;padding:2rem 1rem;background:var(--glass);border:1px solid var(--border);border-radius:12px}
+.stat-num{font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:900;color:var(--neon);text-shadow:var(--glow)}
+.stat-label{color:#2d4a6a;font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;margin-top:0.4rem}
+
+/* CONTACT */
+.contact-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:3rem;align-items:start}
+.contact-info h3{font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--neon);margin-bottom:1rem;letter-spacing:2px}
+.contact-info p{color:#566a8a;line-height:1.9;margin-bottom:2rem}
+.contact-detail{display:flex;align-items:center;gap:0.8rem;margin-bottom:1rem;color:#8892b0;font-size:0.9rem}
+.contact-detail .icon{width:36px;height:36px;border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0}
+.social-row{display:flex;gap:0.8rem;margin-top:2rem;flex-wrap:wrap}
+.social-btn{padding:0.6rem 1.2rem;border:1px solid var(--border);border-radius:6px;color:#566a8a;background:transparent;font-family:'Exo 2',sans-serif;font-size:0.8rem;letter-spacing:1px;cursor:pointer;transition:all 0.3s}
+.social-btn:hover{color:var(--neon);border-color:var(--neon);box-shadow:0 0 12px rgba(0,245,255,0.15)}
+
+/* CONTACT FORM */
+.contact-form{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem}
+.form-title{font-family:'Orbitron',monospace;font-size:1rem;color:#ccd6f6;margin-bottom:1.5rem;letter-spacing:2px}
+.form-group{margin-bottom:1.2rem}
+.form-group label{display:block;color:#566a8a;font-size:0.8rem;letter-spacing:2px;text-transform:uppercase;margin-bottom:0.5rem}
+.form-group input,.form-group textarea,.form-group select{width:100%;background:rgba(0,245,255,0.03);border:1px solid rgba(0,245,255,0.12);border-radius:6px;padding:0.75rem 1rem;color:#d0e8ff;font-family:'Exo 2',sans-serif;font-size:0.95rem;outline:none;transition:border-color 0.3s}
+.form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--neon);box-shadow:0 0 12px rgba(0,245,255,0.12)}
+.form-group textarea{resize:vertical;min-height:100px}
+.form-group select option{background:#0a1020;color:#d0e8ff}
+.send-btn{width:100%;background:linear-gradient(135deg,rgba(0,245,255,0.15),rgba(123,47,255,0.15));border:1px solid var(--neon);color:var(--neon);font-family:'Exo 2',sans-serif;font-size:1rem;letter-spacing:3px;text-transform:uppercase;padding:1rem;border-radius:8px;cursor:pointer;transition:all 0.3s;font-weight:600;margin-top:0.5rem}
+.send-btn:hover{background:rgba(0,245,255,0.12);box-shadow:var(--glow);transform:translateY(-2px)}
+.form-success{display:none;background:rgba(0,245,100,0.08);border:1px solid rgba(0,245,100,0.25);border-radius:8px;padding:1rem;text-align:center;color:#00f564;margin-top:1rem;font-size:0.9rem;letter-spacing:1px}
+
+/* PAYMENT PAGE */
+.payment-page .section{max-width:900px}
+.pay-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;margin-bottom:3rem}
+.plan-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;text-align:center;transition:all 0.3s;position:relative}
+.plan-card.popular{border-color:var(--neon);box-shadow:0 0 30px rgba(0,245,255,0.1)}
+.popular-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--neon);color:#04080f;font-size:0.7rem;letter-spacing:2px;padding:4px 14px;border-radius:20px;font-weight:700;white-space:nowrap}
+.plan-name{font-family:'Orbitron',monospace;font-size:0.9rem;color:#8892b0;letter-spacing:2px;margin-bottom:0.5rem}
+.plan-price{font-family:'Orbitron',monospace;font-size:2.5rem;color:var(--neon);font-weight:900;margin-bottom:0.3rem}
+.plan-period{color:#2d4a6a;font-size:0.8rem;margin-bottom:1.5rem}
+.plan-features{text-align:left;margin-bottom:1.5rem}
+.plan-feature{padding:0.4rem 0;color:#566a8a;font-size:0.85rem;border-bottom:1px solid rgba(255,255,255,0.04);display:flex;align-items:center;gap:0.5rem}
+.plan-feature::before{content:'✓';color:var(--neon);font-size:0.8rem;flex-shrink:0}
+.plan-btn{width:100%;background:transparent;border:1px solid var(--border);color:#8892b0;font-family:'Exo 2',sans-serif;font-size:0.85rem;letter-spacing:2px;padding:0.8rem;border-radius:8px;cursor:pointer;transition:all 0.3s;text-transform:uppercase}
+.plan-btn:hover,.plan-card.popular .plan-btn{background:rgba(0,245,255,0.08);border-color:var(--neon);color:var(--neon)}
+
+.payment-methods{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;max-width:600px;margin:0 auto}
+.pay-title{font-family:'Orbitron',monospace;font-size:1rem;color:#ccd6f6;letter-spacing:2px;margin-bottom:2rem;text-align:center}
+.pay-tabs{display:flex;gap:0.5rem;margin-bottom:2rem;background:rgba(0,0,0,0.3);padding:4px;border-radius:8px}
+.pay-tab{flex:1;background:transparent;border:none;color:#566a8a;font-family:'Exo 2',sans-serif;font-size:0.8rem;letter-spacing:1px;padding:0.6rem;border-radius:6px;cursor:pointer;transition:all 0.3s;text-transform:uppercase}
+.pay-tab.active{background:var(--card);color:var(--neon);border:1px solid var(--border)}
+.pay-panel{display:none}
+.pay-panel.active{display:block}
+.upi-options{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}
+.upi-btn{flex:1;min-width:100px;background:rgba(0,245,255,0.04);border:1px solid var(--border);border-radius:8px;padding:1rem;text-align:center;cursor:pointer;transition:all 0.3s;color:#8892b0;font-size:0.85rem}
+.upi-btn:hover,.upi-btn.selected{border-color:var(--neon);color:var(--neon);background:rgba(0,245,255,0.08)}
+.upi-logo{font-size:1.5rem;margin-bottom:0.3rem}
+.card-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.pay-proceed{width:100%;background:linear-gradient(135deg,rgba(0,245,255,0.15),rgba(123,47,255,0.1));border:1px solid var(--neon);color:var(--neon);font-family:'Exo 2',sans-serif;font-size:1rem;letter-spacing:3px;padding:1rem;border-radius:8px;cursor:pointer;transition:all 0.3s;font-weight:600;text-transform:uppercase;margin-top:1rem}
+.pay-proceed:hover{background:rgba(0,245,255,0.12);box-shadow:var(--glow)}
+.pay-success{display:none;text-align:center;padding:2rem 0}
+.pay-success-icon{font-size:3.5rem;margin-bottom:1rem}
+.pay-success h3{font-family:'Orbitron',monospace;color:var(--neon);letter-spacing:2px;margin-bottom:0.5rem}
+.pay-success p{color:#566a8a}
+
+/* ABOUT */
+.about-grid{display:grid;grid-template-columns:1fr 1.3fr;gap:4rem;align-items:center}
+.about-avatar{width:200px;height:200px;border-radius:50%;border:2px solid var(--neon);display:flex;align-items:center;justify-content:center;font-size:5rem;background:rgba(0,245,255,0.04);box-shadow:var(--glow),inset 0 0 40px rgba(0,245,255,0.04);animation:float 4s ease-in-out infinite}
+.about-text h3{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--neon);margin-bottom:1rem;letter-spacing:2px}
+.about-text p{color:#566a8a;line-height:1.9;margin-bottom:1rem}
+.about-tags{display:flex;flex-wrap:wrap;gap:0.5rem;margin-top:1.5rem}
+.a-tag{background:rgba(123,47,255,0.1);border:1px solid rgba(123,47,255,0.25);color:#b89eff;font-size:0.78rem;padding:5px 14px;border-radius:20px;letter-spacing:1px}
+
+/* FOOTER */
+footer{position:relative;z-index:1;text-align:center;padding:2rem 3rem;border-top:1px solid var(--border);color:#1a2d40;font-size:0.82rem;letter-spacing:2px}
+footer span{color:var(--neon)}
+
+
+
+/* ANIMATION PAGE */
+.anim-ctrl-btn{background:rgba(0,0,0,0.7);border:1px solid rgba(0,245,255,0.25);color:#566a8a;font-family:'Exo 2',sans-serif;font-size:0.78rem;letter-spacing:1px;padding:8px 18px;border-radius:30px;cursor:pointer;transition:all 0.3s;backdrop-filter:blur(10px)}
+.anim-ctrl-btn:hover,.anim-ctrl-btn.active-scene{border-color:var(--neon);color:var(--neon);box-shadow:0 0 15px rgba(0,245,255,0.2);background:rgba(0,245,255,0.06)}
+@keyframes spinRing{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+
+/* AI CHAT */
+.ai-msg{display:flex;align-items:flex-start;gap:0.8rem}
+.ai-msg.user-msg{flex-direction:row-reverse}
+.msg-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;border:1px solid var(--border)}
+.bot-msg .msg-avatar{background:rgba(0,245,255,0.08)}
+.user-msg .msg-avatar{background:rgba(255,0,170,0.08)}
+.msg-bubble{background:rgba(0,245,255,0.05);border:1px solid rgba(0,245,255,0.12);border-radius:12px;border-top-left-radius:2px;padding:0.8rem 1.1rem;color:#d0e8ff;font-size:0.9rem;line-height:1.7;max-width:75%}
+.user-msg .msg-bubble{background:rgba(255,0,170,0.06);border-color:rgba(255,0,170,0.15);border-top-left-radius:12px;border-top-right-radius:2px}
+.typing-dots{display:flex;gap:4px;padding:0.5rem 0}
+.typing-dots span{width:7px;height:7px;background:var(--neon);border-radius:50%;animation:dotBounce 1.2s infinite}
+.typing-dots span:nth-child(2){animation-delay:0.2s}
+.typing-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes dotBounce{0%,100%{transform:translateY(0);opacity:0.4}50%{transform:translateY(-6px);opacity:1}}
+.quick-btn{background:rgba(0,245,255,0.04);border:1px solid rgba(0,245,255,0.15);color:#566a8a;font-family:'Exo 2',sans-serif;font-size:0.75rem;padding:5px 12px;border-radius:20px;cursor:pointer;transition:all 0.3s;letter-spacing:1px}
+.quick-btn:hover{border-color:var(--neon);color:var(--neon)}
+#chatMessages::-webkit-scrollbar{width:4px}
+#chatMessages::-webkit-scrollbar-track{background:transparent}
+#chatMessages::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.2);border-radius:2px}
+
+/* ANIMATIONS */
+@keyframes rotateCube{0%{transform:rotateX(0) rotateY(0)}100%{transform:rotateX(360deg) rotateY(360deg)}}
+@keyframes blink{0%,100%{border-color:transparent}50%{border-color:var(--neon2)}}
+@keyframes pulse{0%,100%{text-shadow:var(--glow)}50%{text-shadow:0 0 40px rgba(0,245,255,0.8)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-15px)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}
+  .nav-links{display:none;position:absolute;top:100%;left:0;right:0;flex-direction:column;background:rgba(4,8,15,0.97);border-bottom:1px solid var(--border);padding:1rem}
+  .nav-links.open{display:flex}
+  .hamburger{display:flex}
+  .hero{padding:3rem 1.5rem;flex-direction:column}
+  .hero-visual{flex:none}
+  .section{padding:3rem 1.5rem}
+  .contact-grid{grid-template-columns:1fr}
+  .about-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .card-row{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<nav>
+  <div class="logo" onclick="showPage('home')"><span>S</span> FULL STACK DEV</div>
+  <div class="hamburger" onclick="toggleMenu()" id="ham"><span></span><span></span><span></span></div>
+  <div class="nav-links" id="navLinks">
+    <button class="nav-btn active-nav" onclick="showPage('home')">Home</button>
+    <button class="nav-btn" onclick="showPage('about')">About</button>
+    <button class="nav-btn" onclick="showPage('services')">Services</button>
+    <button class="nav-btn" onclick="showPage('projects')">Projects</button>
+    <button class="nav-btn" onclick="showPage('skills')">Skills</button>
+    <button class="nav-btn" onclick="showPage('payment')">Hire & Pay</button>
+    <button class="nav-btn" onclick="showPage('animation')">✨ Live 3D</button>
+    <button class="nav-btn" onclick="showPage('ai')">AI Chat</button>
+    <button class="nav-btn" onclick="showPage('contact')">Contact</button>
+  </div>
+</nav>
+
+<!-- HOME PAGE -->
+<div id="page-home" class="page active">
+  <div class="hero">
+    <div class="hero-text">
+      <div class="badge">&#9889; Available for Projects</div>
+      <h1 class="hero-name"><span class="s">S</span> Full Stack<br>Developer</h1>
+      <div class="hero-role">I build <span class="typing-text" id="typing"></span></div>
+      <p class="hero-desc">Expert in Web Apps, Mobile Apps, 3D Experiences & Game Development. I transform ideas into extraordinary digital products — from front-end magic to back-end power.</p>
+      <div class="hero-btns">
+        <button class="btn btn-glow" onclick="showPage('projects')">View My Work</button>
+        <button class="btn btn-pink" onclick="showPage('contact')">Hire Me Now</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="cube-wrap">
+        <div class="cube">
+          <div class="face face-front">REACT</div>
+          <div class="face face-back">NODE.JS</div>
+          <div class="face face-left">THREE.JS</div>
+          <div class="face face-right">PYTHON</div>
+          <div class="face face-top">UNITY</div>
+          <div class="face face-bottom">AWS</div>
+        </div>
+      </div>
+      <div class="orbit-tags">
+        <span class="orbit-tag">Web App</span><span class="orbit-tag">Game Dev</span>
+        <span class="orbit-tag">3D / WebGL</span><span class="orbit-tag">Mobile App</span>
+        <span class="orbit-tag">Full Stack</span><span class="orbit-tag">API Dev</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-title">SERVICES</div>
+    <div class="sec-sub">// What I Build</div>
+    <div class="divider"></div>
+    <div class="services-grid">
+      <div class="service-card" onclick="showPage('services')">
+        <div class="service-icon">🌐</div>
+        <div class="service-title">Full Stack Web App</div>
+        <div class="service-desc">End-to-end web applications with React/Next.js frontend and Node.js/Python backend with database integration.</div>
+        <span class="service-price">Starting ₹5,000</span>
+      </div>
+      <div class="service-card" onclick="showPage('services')">
+        <div class="service-icon">🎮</div>
+        <div class="service-title">Game Development</div>
+        <div class="service-desc">2D/3D browser games and mobile games built with Unity, Three.js, and Phaser.js with real-time multiplayer.</div>
+        <span class="service-price">Starting ₹8,000</span>
+      </div>
+      <div class="service-card" onclick="showPage('services')">
+        <div class="service-icon">📱</div>
+        <div class="service-title">Mobile App Dev</div>
+        <div class="service-desc">Cross-platform iOS & Android apps using React Native with smooth UI, push notifications, and payment integration.</div>
+        <span class="service-price">Starting ₹10,000</span>
+      </div>
+      <div class="service-card" onclick="showPage('services')">
+        <div class="service-icon">🧊</div>
+        <div class="service-title">3D Web Experience</div>
+        <div class="service-desc">Stunning 3D interactive websites and portfolios using Three.js, WebGL, and GSAP animations.</div>
+        <span class="service-price">Starting ₹6,000</span>
+      </div>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-num" data-target="50">0</div><div class="stat-label">Projects Done</div></div>
+      <div class="stat"><div class="stat-num" data-target="3">0</div><div class="stat-label">Years Exp</div></div>
+      <div class="stat"><div class="stat-num" data-target="30">0</div><div class="stat-label">Happy Clients</div></div>
+      <div class="stat"><div class="stat-num" data-target="12">0</div><div class="stat-label">Games Built</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ABOUT PAGE -->
+<div id="page-about" class="page">
+  <div class="section">
+    <div class="sec-title">ABOUT ME</div>
+    <div class="sec-sub">// Who I Am</div>
+    <div class="divider"></div>
+    <div class="about-grid">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:1.5rem">
+        <div class="about-avatar">👨‍💻</div>
+        <div style="text-align:center">
+          <div style="font-family:'Orbitron',monospace;color:var(--neon);font-size:1.1rem;letter-spacing:2px;margin-bottom:0.3rem">S</div>
+          <div style="color:#566a8a;font-size:0.85rem;letter-spacing:2px">Full Stack Developer</div>
+        </div>
+      </div>
+      <div class="about-text">
+        <h3>Building Digital Futures</h3>
+        <p>I am a passionate Full Stack Developer specializing in Web Applications, Mobile Apps, 3D Experiences, and Game Development. With over 3 years of hands-on experience, I bring ideas to life with clean code and stunning visuals.</p>
+        <p>My expertise spans the entire development stack — from crafting pixel-perfect UIs to architecting scalable back-end systems. I love pushing the boundaries of what's possible on the web.</p>
+        <p>Whether it's a startup MVP, a game, a 3D portfolio, or an enterprise SaaS platform — I deliver excellence on time, every time.</p>
+        <div class="about-tags">
+          <span class="a-tag">Problem Solver</span><span class="a-tag">Clean Code</span>
+          <span class="a-tag">Fast Delivery</span><span class="a-tag">Open Source</span>
+          <span class="a-tag">Game Developer</span><span class="a-tag">UI/UX Aware</span>
+        </div>
+        <div style="margin-top:2rem">
+          <button class="btn btn-glow" onclick="showPage('contact')">Let's Work Together</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES PAGE -->
+<div id="page-services" class="page">
+  <div class="section">
+    <div class="sec-title">SERVICES</div>
+    <div class="sec-sub">// What I Offer</div>
+    <div class="divider"></div>
+    <div class="services-grid">
+      <div class="service-card">
+        <div class="service-icon">🌐</div>
+        <div class="service-title">Full Stack Web App</div>
+        <div class="service-desc">Complete web applications — React/Next.js frontend, Node.js/Express/Python backend, REST API, database design (MongoDB, PostgreSQL), authentication, admin panel.</div>
+        <span class="service-price">From ₹5,000</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🎮</div>
+        <div class="service-title">Game Development</div>
+        <div class="service-desc">Browser & mobile games with Unity (C#), Three.js, Phaser.js. Multiplayer with WebSockets. Ad integration, in-app purchases, leaderboards.</div>
+        <span class="service-price">From ₹8,000</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📱</div>
+        <div class="service-title">Mobile App (Android/iOS)</div>
+        <div class="service-desc">Cross-platform apps with React Native. Custom UI, push notifications, maps, camera, payment gateway, Google/Apple login integration.</div>
+        <span class="service-price">From ₹10,000</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🧊</div>
+        <div class="service-title">3D Interactive Website</div>
+        <div class="service-desc">Immersive 3D web experiences using Three.js, WebGL, and GSAP. 3D portfolios, product showcases, animated landing pages, and VR-ready demos.</div>
+        <span class="service-price">From ₹6,000</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🛒</div>
+        <div class="service-title">E-Commerce Platform</div>
+        <div class="service-desc">Full-featured online store with product management, cart, checkout, Razorpay/Stripe payment, order tracking, and admin dashboard.</div>
+        <span class="service-price">From ₹12,000</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">🤖</div>
+        <div class="service-title">AI-Powered App</div>
+        <div class="service-desc">Apps integrated with AI/ML — chatbots, image recognition, recommendation engines, NLP features using OpenAI, Gemini, or custom models.</div>
+        <span class="service-price">From ₹15,000</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">📊</div>
+        <div class="service-title">Dashboard & Analytics</div>
+        <div class="service-desc">Real-time dashboards with D3.js/Chart.js, live data feeds, custom KPI widgets, export features, and multi-user role management.</div>
+        <span class="service-price">From ₹7,000</span>
+      </div>
+      <div class="service-card">
+        <div class="service-icon">⚙️</div>
+        <div class="service-title">API & Backend Dev</div>
+        <div class="service-desc">Scalable REST/GraphQL APIs, microservices, database optimization, cloud deployment (AWS/GCP/Vercel), CI/CD pipelines, Docker.</div>
+        <span class="service-price">From ₹4,000</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PROJECTS PAGE -->
+<div id="page-projects" class="page">
+  <div class="section">
+    <div class="sec-title">PROJECTS</div>
+    <div class="sec-sub">// Selected Work</div>
+    <div class="divider"></div>
+    <div class="projects-grid">
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#162030)">🎮</div>
+        <div class="proj-body">
+          <div class="proj-num">01</div>
+          <div class="proj-title">Battle Arena — Multiplayer Game</div>
+          <p class="proj-desc">Real-time multiplayer battle game with WebSocket. 100+ concurrent players, live leaderboard, matchmaking system & Unity WebGL build.</p>
+          <div class="proj-tags"><span class="tag">Unity</span><span class="tag">Socket.io</span><span class="tag">Node.js</span><span class="tag">Redis</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Live on Web</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 500+ Players</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#1a1030)">🧊</div>
+        <div class="proj-body">
+          <div class="proj-num">02</div>
+          <div class="proj-title">3D Galaxy Portfolio</div>
+          <p class="proj-desc">Immersive 3D space-themed portfolio. Users fly through a galaxy to explore projects. Smooth GSAP animations & WebGL shaders.</p>
+          <div class="proj-tags"><span class="tag">Three.js</span><span class="tag">GSAP</span><span class="tag">WebGL</span><span class="tag">Blender</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Live Demo</span>
+            <span style="color:#566a8a;font-size:0.75rem">• Award Winning</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#0d2010)">🛒</div>
+        <div class="proj-body">
+          <div class="proj-num">03</div>
+          <div class="proj-title">ShopX — E-Commerce Platform</div>
+          <p class="proj-desc">Full-featured online store with Razorpay payment, real-time inventory, admin panel, order tracking & mobile PWA support.</p>
+          <div class="proj-tags"><span class="tag">Next.js</span><span class="tag">Razorpay</span><span class="tag">MongoDB</span><span class="tag">Redux</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Production</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 1000+ Orders</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#20100d)">📱</div>
+        <div class="proj-body">
+          <div class="proj-num">04</div>
+          <div class="proj-title">PuzzleMania — Android Game</div>
+          <p class="proj-desc">Addictive puzzle game on Google Play. 50,000+ downloads, AdMob ads, in-app purchases, daily challenges & cloud save.</p>
+          <div class="proj-tags"><span class="tag">Unity</span><span class="tag">C#</span><span class="tag">AdMob</span><span class="tag">Firebase</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Google Play</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 50K+ Downloads</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#101030)">🤖</div>
+        <div class="proj-body">
+          <div class="proj-num">05</div>
+          <div class="proj-title">AiChat — AI Assistant App</div>
+          <p class="proj-desc">Smart AI chat app with real-time streaming, conversation memory, file upload, code highlighting & multi-model support.</p>
+          <div class="proj-tags"><span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">React</span><span class="tag">Gemini</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Live App</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 200+ Users</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#0d2015)">📊</div>
+        <div class="proj-body">
+          <div class="proj-num">06</div>
+          <div class="proj-title">DataPulse — SaaS Dashboard</div>
+          <p class="proj-desc">Real-time analytics dashboard with D3.js charts, multi-tenant support, CSV export, role-based access & dark/light mode.</p>
+          <div class="proj-tags"><span class="tag">React</span><span class="tag">D3.js</span><span class="tag">PostgreSQL</span><span class="tag">AWS</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ SaaS Live</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 50+ Companies</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#102015)">🏥</div>
+        <div class="proj-body">
+          <div class="proj-num">07</div>
+          <div class="proj-title">MediBook — Doctor Appointment App</div>
+          <p class="proj-desc">Cross-platform mobile app for booking doctor appointments. Video call, prescription upload, payment & reminder notifications.</p>
+          <div class="proj-tags"><span class="tag">React Native</span><span class="tag">Node.js</span><span class="tag">Stripe</span><span class="tag">Twilio</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ App Store</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 5000+ Bookings</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#201510)">🏎️</div>
+        <div class="proj-body">
+          <div class="proj-num">08</div>
+          <div class="proj-title">RacerX — 3D Browser Racing Game</div>
+          <p class="proj-desc">Fast-paced 3D racing game running in the browser. Physics engine, multiple tracks, car customization & time trial leaderboard.</p>
+          <div class="proj-tags"><span class="tag">Three.js</span><span class="tag">Cannon.js</span><span class="tag">JavaScript</span><span class="tag">WebGL</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Play Now</span>
+            <span style="color:#566a8a;font-size:0.75rem">• Browser Game</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#15102a)">🎵</div>
+        <div class="proj-body">
+          <div class="proj-num">09</div>
+          <div class="proj-title">BeatFlow — Music Streaming App</div>
+          <p class="proj-desc">Spotify-like music streaming platform. Playlist management, real-time lyrics, artist pages, offline mode & social sharing.</p>
+          <div class="proj-tags"><span class="tag">React</span><span class="tag">Node.js</span><span class="tag">MongoDB</span><span class="tag">AWS S3</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Live</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 2000+ Songs</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#0a1525)">🏠</div>
+        <div class="proj-body">
+          <div class="proj-num">10</div>
+          <div class="proj-title">HomeViz — 3D Interior Design App</div>
+          <p class="proj-desc">Interactive 3D room designer. Drag & drop furniture, real-time lighting, AR preview on mobile & export floor plans as PDF.</p>
+          <div class="proj-tags"><span class="tag">Three.js</span><span class="tag">React</span><span class="tag">AR.js</span><span class="tag">Python</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Web + Mobile</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 300+ Designs</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#1a1505)">📚</div>
+        <div class="proj-body">
+          <div class="proj-num">11</div>
+          <div class="proj-title">EduLearn — Online Learning Platform</div>
+          <p class="proj-desc">Full LMS platform with video courses, quizzes, certificates, progress tracking, live classes & payment integration.</p>
+          <div class="proj-tags"><span class="tag">Next.js</span><span class="tag">Django</span><span class="tag">PostgreSQL</span><span class="tag">Zoom API</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Production</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 800+ Students</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+      <div class="proj-card">
+        <div class="proj-header" style="background:linear-gradient(135deg,#0d1117,#150d20)">🔐</div>
+        <div class="proj-body">
+          <div class="proj-num">12</div>
+          <div class="proj-title">SecureVault — Password Manager App</div>
+          <p class="proj-desc">End-to-end encrypted password manager. Biometric login, auto-fill, breach detection, secure notes & cross-device sync.</p>
+          <div class="proj-tags"><span class="tag">React Native</span><span class="tag">AES-256</span><span class="tag">Node.js</span><span class="tag">Firebase</span></div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.8rem">
+            <span style="color:#00f564;font-size:0.75rem;letter-spacing:1px">✓ Android + iOS</span>
+            <span style="color:#566a8a;font-size:0.75rem">• 1000+ Users</span>
+          </div>
+          <button class="proj-btn" style="margin-top:0.8rem">View Project →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SKILLS PAGE -->
+<div id="page-skills" class="page">
+  <div class="section">
+    <div class="sec-title">SKILLS</div>
+    <div class="sec-sub">// Technology Stack</div>
+    <div class="divider"></div>
+    <div style="margin-bottom:2rem;color:#566a8a;font-size:0.85rem;letter-spacing:2px;text-transform:uppercase">Frontend</div>
+    <div class="skills-grid" style="margin-bottom:2.5rem">
+      <div class="skill-card"><div class="skill-icon">⚛️</div><div class="skill-name">React / Next.js</div><div class="skill-bar"><div class="skill-fill" style="width:95%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">🎨</div><div class="skill-name">HTML / CSS / JS</div><div class="skill-bar"><div class="skill-fill" style="width:98%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">🌀</div><div class="skill-name">Three.js / WebGL</div><div class="skill-bar"><div class="skill-fill" style="width:80%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">💨</div><div class="skill-name">Tailwind CSS</div><div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div></div>
+    </div>
+    <div style="margin-bottom:2rem;color:#566a8a;font-size:0.85rem;letter-spacing:2px;text-transform:uppercase">Backend</div>
+    <div class="skills-grid" style="margin-bottom:2.5rem">
+      <div class="skill-card"><div class="skill-icon">🟢</div><div class="skill-name">Node / Express</div><div class="skill-bar"><div class="skill-fill" style="width:90%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">🐍</div><div class="skill-name">Python / Django</div><div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">🗄️</div><div class="skill-name">MongoDB / SQL</div><div class="skill-bar"><div class="skill-fill" style="width:85%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">☁️</div><div class="skill-name">AWS / Docker</div><div class="skill-bar"><div class="skill-fill" style="width:72%"></div></div></div>
+    </div>
+    <div style="margin-bottom:2rem;color:#566a8a;font-size:0.85rem;letter-spacing:2px;text-transform:uppercase">Game & Mobile</div>
+    <div class="skills-grid">
+      <div class="skill-card"><div class="skill-icon">🎮</div><div class="skill-name">Unity / C#</div><div class="skill-bar"><div class="skill-fill" style="width:82%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">📱</div><div class="skill-name">React Native</div><div class="skill-bar"><div class="skill-fill" style="width:80%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">👾</div><div class="skill-name">Phaser.js</div><div class="skill-bar"><div class="skill-fill" style="width:75%"></div></div></div>
+      <div class="skill-card"><div class="skill-icon">🔥</div><div class="skill-name">Firebase</div><div class="skill-bar"><div class="skill-fill" style="width:78%"></div></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT PAGE -->
+<div id="page-payment" class="payment-page page">
+  <div class="section">
+    <div class="sec-title">HIRE & PAY</div>
+    <div class="sec-sub">// Choose Your Plan</div>
+    <div class="divider"></div>
+    <div class="pay-plans">
+      <div class="plan-card">
+        <div class="plan-name">BASIC</div>
+        <div class="plan-price">₹5K</div>
+        <div class="plan-period">per project</div>
+        <div class="plan-features">
+          <div class="plan-feature">Single Page Website</div>
+          <div class="plan-feature">Responsive Design</div>
+          <div class="plan-feature">Basic Animations</div>
+          <div class="plan-feature">Contact Form</div>
+          <div class="plan-feature">5-day Delivery</div>
+        </div>
+        <button class="plan-btn" onclick="selectPlan('Basic — ₹5,000')">Get Started</button>
+      </div>
+      <div class="plan-card popular">
+        <div class="popular-badge">⚡ MOST POPULAR</div>
+        <div class="plan-name">PRO</div>
+        <div class="plan-price">₹15K</div>
+        <div class="plan-period">per project</div>
+        <div class="plan-features">
+          <div class="plan-feature">Full Stack Web App</div>
+          <div class="plan-feature">Database Integration</div>
+          <div class="plan-feature">User Authentication</div>
+          <div class="plan-feature">Admin Dashboard</div>
+          <div class="plan-feature">Payment Gateway</div>
+          <div class="plan-feature">14-day Delivery</div>
+        </div>
+        <button class="plan-btn" onclick="selectPlan('Pro — ₹15,000')">Get Started</button>
+      </div>
+      <div class="plan-card">
+        <div class="plan-name">ENTERPRISE</div>
+        <div class="plan-price">₹40K+</div>
+        <div class="plan-period">per project</div>
+        <div class="plan-features">
+          <div class="plan-feature">Game / 3D App</div>
+          <div class="plan-feature">Mobile App (iOS + Android)</div>
+          <div class="plan-feature">AI / ML Integration</div>
+          <div class="plan-feature">Cloud Deployment</div>
+          <div class="plan-feature">Source Code Included</div>
+          <div class="plan-feature">30-day Delivery</div>
+        </div>
+        <button class="plan-btn" onclick="selectPlan('Enterprise — ₹40,000+')">Get Started</button>
+      </div>
+    </div>
+
+    <div class="payment-methods" id="paymentBox">
+      <div class="pay-title">💳 SECURE PAYMENT GATEWAY</div>
+      <div id="selectedPlanLabel" style="text-align:center;color:var(--neon);font-size:0.85rem;letter-spacing:2px;margin-bottom:1.5rem;background:rgba(0,245,255,0.06);border:1px solid var(--border);padding:0.6rem;border-radius:6px">Select a plan above to proceed</div>
+      <div class="pay-tabs">
+        <button class="pay-tab active" onclick="switchPayTab('upi')">UPI</button>
+        <button class="pay-tab" onclick="switchPayTab('card')">Debit/Credit Card</button>
+        <button class="pay-tab" onclick="switchPayTab('netbanking')">Net Banking</button>
+      </div>
+
+      <div class="pay-panel active" id="panel-upi">
+        <div style="color:#566a8a;font-size:0.85rem;margin-bottom:1rem;letter-spacing:1px">Choose UPI App</div>
+        <div class="upi-options">
+          <div class="upi-btn" onclick="selectUPI(this)"><div class="upi-logo">📱</div>GPay</div>
+          <div class="upi-btn" onclick="selectUPI(this)"><div class="upi-logo">📲</div>PhonePe</div>
+          <div class="upi-btn" onclick="selectUPI(this)"><div class="upi-logo">💜</div>Paytm</div>
+          <div class="upi-btn" onclick="selectUPI(this)"><div class="upi-logo">🏦</div>Other UPI</div>
+        </div>
+        <div class="form-group">
+          <label>UPI ID</label>
+          <input type="text" id="upiId" placeholder="yourname@upi" />
+        </div>
+        <button class="pay-proceed" onclick="processPayment()">⚡ Pay Now</button>
+      </div>
+
+      <div class="pay-panel" id="panel-card">
+        <div class="form-group">
+          <label>Cardholder Name</label>
+          <input type="text" placeholder="Full Name on Card" />
+        </div>
+        <div class="form-group">
+          <label>Card Number</label>
+          <input type="text" placeholder="1234 5678 9012 3456" maxlength="19" oninput="formatCard(this)" />
+        </div>
+        <div class="card-row">
+          <div class="form-group">
+            <label>Expiry Date</label>
+            <input type="text" placeholder="MM / YY" maxlength="7" />
+          </div>
+          <div class="form-group">
+            <label>CVV</label>
+            <input type="text" placeholder="•••" maxlength="3" />
+          </div>
+        </div>
+        <div style="display:flex;gap:0.8rem;margin-top:0.5rem;flex-wrap:wrap">
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:4px 12px;border-radius:4px;color:#566a8a;font-size:0.75rem">💳 Visa</span>
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:4px 12px;border-radius:4px;color:#566a8a;font-size:0.75rem">💳 Mastercard</span>
+          <span style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:4px 12px;border-radius:4px;color:#566a8a;font-size:0.75rem">💳 RuPay</span>
+        </div>
+        <button class="pay-proceed" onclick="processPayment()">🔒 Pay Securely</button>
+      </div>
+
+      <div class="pay-panel" id="panel-netbanking">
+        <div class="form-group">
+          <label>Select Your Bank</label>
+          <select>
+            <option>State Bank of India (SBI)</option>
+            <option>HDFC Bank</option>
+            <option>ICICI Bank</option>
+            <option>Axis Bank</option>
+            <option>Punjab National Bank</option>
+            <option>Bank of Baroda</option>
+            <option>Kotak Mahindra Bank</option>
+            <option>Other Bank</option>
+          </select>
+        </div>
+        <button class="pay-proceed" onclick="processPayment()">🏦 Proceed to Net Banking</button>
+      </div>
+
+      <div class="pay-success" id="paySuccess">
+        <div class="pay-success-icon">✅</div>
+        <h3>Payment Initiated!</h3>
+        <p style="margin-top:0.5rem">We will confirm your project within 24 hours.<br>Check your email for details.</p>
+        <button class="btn btn-glow" style="margin-top:1.5rem" onclick="showPage('contact')">Message Me</button>
+      </div>
+
+      <div style="margin-top:1.5rem;text-align:center;color:#1a2d40;font-size:0.75rem;letter-spacing:1px">🔒 256-bit SSL Encrypted • Powered by Razorpay</div>
+    </div>
+  </div>
+</div>
+
+<!-- CONTACT PAGE -->
+<div id="page-contact" class="page">
+  <div class="section">
+    <div class="sec-title">CONTACT</div>
+    <div class="sec-sub">// Get In Touch</div>
+    <div class="divider"></div>
+    <div class="contact-grid">
+      <div class="contact-info">
+        <h3>Let's Build Something Great</h3>
+        <p>Have a project idea? Need a full stack app, game, or 3D website? I'm available for freelance work and collaborations. Let's connect and create something extraordinary.</p>
+        <div class="contact-detail"><div class="icon">📧</div><div>skahil33999@gmail.com</div></div>
+        <div class="contact-detail"><div class="icon">📞</div><div>+91 80013 34102</div></div>
+        <div class="contact-detail"><div class="icon">📍</div><div>India — Available Worldwide</div></div>
+        <div class="contact-detail"><div class="icon">⏱️</div><div>Response within 24 hours</div></div>
+        <div class="social-row">
+          <button class="social-btn">GitHub</button>
+          <button class="social-btn">LinkedIn</button>
+          <button class="social-btn">Twitter</button>
+          <button class="social-btn">YouTube</button>
+          <button class="social-btn">Fiverr</button>
+        </div>
+      </div>
+      <div class="contact-form">
+        <div class="form-title">// SEND A MESSAGE</div>
+        <div class="form-group">
+          <label>Your Name</label>
+          <input type="text" id="contactName" placeholder="John Doe" />
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="contactEmail" placeholder="you@example.com" />
+        </div>
+        <div class="form-group">
+          <label>Service Needed</label>
+          <select id="contactService">
+            <option value="">-- Select Service --</option>
+            <option>Full Stack Web App</option>
+            <option>Game Development</option>
+            <option>Mobile App (Android/iOS)</option>
+            <option>3D Interactive Website</option>
+            <option>E-Commerce Platform</option>
+            <option>AI-Powered App</option>
+            <option>Dashboard & Analytics</option>
+            <option>API & Backend Dev</option>
+            <option>Other / Custom Project</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Your Message</label>
+          <textarea id="contactMsg" placeholder="Tell me about your project — deadline, budget, features needed..."></textarea>
+        </div>
+        <button class="send-btn" onclick="sendMessage()">⚡ SEND MESSAGE</button>
+        <div class="form-success" id="formSuccess">✅ Message sent! I'll reply within 24 hours.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- ANIMATION PAGE -->
+<div id="page-animation" class="page" style="overflow:hidden;background:#000;position:relative">
+  <canvas id="animCanvas" style="position:absolute;top:0;left:0;width:100%;height:100%;z-index:0"></canvas>
+
+  <!-- 3D Model Showcase -->
+  <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:2rem">
+
+    <!-- Title -->
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-family:'Orbitron',monospace;font-size:clamp(0.9rem,2.5vw,1.4rem);color:rgba(0,245,255,0.8);letter-spacing:6px;text-shadow:0 0 30px rgba(0,245,255,0.6)" id="animTitle">3D MODEL SHOWCASE</div>
+      <div style="color:rgba(0,245,255,0.3);font-size:0.7rem;letter-spacing:3px;margin-top:0.3rem">DRAG TO ROTATE • SCROLL TO ZOOM</div>
+    </div>
+
+    <!-- 3D Viewer Container -->
+    <div id="model3d" style="width:min(420px,85vw);height:min(420px,85vw);position:relative;cursor:grab">
+      <canvas id="model3dCanvas" style="width:100%;height:100%;border-radius:50%;border:1px solid rgba(0,245,255,0.2);box-shadow:0 0 60px rgba(0,245,255,0.15),0 0 120px rgba(0,245,255,0.05)"></canvas>
+      <!-- Rotating ring -->
+      <div style="position:absolute;inset:-20px;border-radius:50%;border:1px solid rgba(0,245,255,0.1);animation:spinRing 8s linear infinite;pointer-events:none"></div>
+      <div style="position:absolute;inset:-40px;border-radius:50%;border:1px dashed rgba(255,0,170,0.08);animation:spinRing 12s linear infinite reverse;pointer-events:none"></div>
+    </div>
+
+    <!-- Model Info -->
+    <div id="modelInfo" style="text-align:center;margin-top:2rem">
+      <div style="font-family:'Orbitron',monospace;font-size:1rem;color:#ccd6f6;letter-spacing:2px" id="modelName">CYBER SPHERE</div>
+      <div style="color:#566a8a;font-size:0.8rem;letter-spacing:2px;margin-top:0.3rem" id="modelSub">Interactive 3D Model</div>
+    </div>
+
+    <!-- Controls -->
+    <div style="display:flex;gap:0.7rem;margin-top:2rem;flex-wrap:wrap;justify-content:center">
+      <button onclick="setScene('sphere')" class="anim-ctrl-btn active-scene" id="btn-sphere">💎 Cyber Sphere</button>
+      <button onclick="setScene('diamond')" class="anim-ctrl-btn" id="btn-diamond">💠 Diamond</button>
+      <button onclick="setScene('torus')" class="anim-ctrl-btn" id="btn-torus">🌀 Torus Ring</button>
+      <button onclick="setScene('crystal')" class="anim-ctrl-btn" id="btn-crystal">🔮 Crystal</button>
+      <button onclick="setScene('robot')" class="anim-ctrl-btn" id="btn-robot">🤖 Robot Head</button>
+    </div>
+  </div>
+</div>
+
+<!-- AI DASHBOARD PAGE -->
+<div id="page-ai" class="page">
+  <div class="section" style="max-width:900px">
+    <div class="sec-title">AI ASSISTANT</div>
+    <div class="sec-sub">// Powered by Gemini AI — Chat with clients instantly</div>
+    <div class="divider"></div>
+    <div id="aiDashboard" style="background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden">
+      <!-- Chat Header -->
+      <div style="padding:1.2rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:1rem;background:rgba(0,245,255,0.03)">
+        <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--neon),var(--neon3));display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">🤖</div>
+        <div>
+          <div style="font-family:'Orbitron',monospace;font-size:0.85rem;color:var(--neon);letter-spacing:2px">S AI ASSISTANT</div>
+          <div style="font-size:0.75rem;color:#2d4a6a;letter-spacing:1px">● Online — Powered by Gemini</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:0.5rem">
+          <button onclick="clearChat()" style="background:transparent;border:1px solid var(--border);color:#566a8a;font-family:'Exo 2',sans-serif;font-size:0.75rem;padding:5px 12px;border-radius:4px;cursor:pointer;letter-spacing:1px">Clear</button>
+        </div>
+      </div>
+      <!-- Chat Messages -->
+      <div id="chatMessages" style="height:420px;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
+        <div class="ai-msg bot-msg">
+          <div class="msg-avatar">🤖</div>
+          <div class="msg-bubble">Hello! I am the AI Assistant for <strong>S Full Stack Developer</strong>. I can answer questions about services, pricing, project timelines, and more. How can I help you today?</div>
+        </div>
+      </div>
+      <!-- Quick Replies -->
+      <div style="padding:0.8rem 1.5rem;border-top:1px solid rgba(0,245,255,0.06);display:flex;gap:0.5rem;flex-wrap:wrap">
+        <button class="quick-btn" onclick="quickSend('What services do you offer?')">Services</button>
+        <button class="quick-btn" onclick="quickSend('What is your pricing?')">Pricing</button>
+        <button class="quick-btn" onclick="quickSend('How long does a project take?')">Timeline</button>
+        <button class="quick-btn" onclick="quickSend('How can I contact you?')">Contact</button>
+        <button class="quick-btn" onclick="quickSend('Do you build games?')">Game Dev</button>
+      </div>
+      <!-- Input -->
+      <div style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;gap:0.8rem;align-items:center">
+        <input id="chatInput" type="text" placeholder="Type your message..." onkeydown="if(event.key==='Enter')sendChat()"
+          style="flex:1;background:rgba(0,245,255,0.03);border:1px solid rgba(0,245,255,0.12);border-radius:8px;padding:0.75rem 1rem;color:#d0e8ff;font-family:'Exo 2',sans-serif;font-size:0.95rem;outline:none"/>
+        <button onclick="sendChat()" id="sendChatBtn"
+          style="background:linear-gradient(135deg,rgba(0,245,255,0.2),rgba(123,47,255,0.2));border:1px solid var(--neon);color:var(--neon);font-family:'Exo 2',sans-serif;font-size:0.85rem;letter-spacing:2px;padding:0.75rem 1.5rem;border-radius:8px;cursor:pointer;transition:all 0.3s;white-space:nowrap">
+          SEND ⚡
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>© 2026 <span>S Full Stack Developer</span> — All Rights Reserved &nbsp;|&nbsp; Built with ⚡ Passion</p>
+</footer>
+
+<script>
+// ADVANCED 3D PARTICLE UNIVERSE
+const canvas=document.getElementById('bg'),ctx=canvas.getContext('2d');
+let W,H,mx=0,my=0,time=0;
+function resize(){W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+document.addEventListener('mousemove',e=>{mx=e.clientX;my=e.clientY});
+
+// 3D Stars
+const stars=Array.from({length:200},()=>({
+  x:(Math.random()-0.5)*2000,
+  y:(Math.random()-0.5)*2000,
+  z:Math.random()*2000,
+  px:0,py:0,size:0
+}));
+
+// Floating orbs
+const orbs=Array.from({length:6},(_,i)=>({
+  angle:i*(Math.PI*2/6),
+  radius:Math.min(W,H)*0.28,
+  speed:0.003+i*0.001,
+  size:2+i*0.8,
+  color:i%3===0?'0,245,255':i%3===1?'255,0,170':'123,47,255'
+}));
+
+// DNA helix points
+const dna=Array.from({length:60},(_,i)=>({t:i/60}));
+
+// Grid
+function drawGrid(){
+  const fov=300,camZ=time*0.5;
+  ctx.strokeStyle='rgba(0,245,255,0.03)';
+  ctx.lineWidth=1;
+  const gridSize=80,cols=30,rows=20;
+  for(let i=-cols;i<=cols;i++){
+    const x1=W/2+((i*gridSize)/(fov))*fov;
+    ctx.beginPath();
+    ctx.moveTo(x1,0);ctx.lineTo(x1,H);
+    ctx.stroke();
+  }
+  for(let j=-rows;j<=rows;j++){
+    const y1=H/2+((j*gridSize)/(fov))*fov;
+    ctx.beginPath();
+    ctx.moveTo(0,y1);ctx.lineTo(W,y1);
+    ctx.stroke();
+  }
+}
+
+// Warp speed stars
+function drawStars(){
+  const cx=W/2,cy=H/2,speed=2+time*0.01;
+  stars.forEach(s=>{
+    s.z-=speed;
+    if(s.z<=0)s.z=2000;
+    const k=200/s.z;
+    const px=cx+s.x*k,py=cy+s.y*k;
+    const pz2=200/(s.z+speed);
+    const ppx=cx+s.x*pz2,ppy=cy+s.y*pz2;
+    s.size=Math.max(0.1,(1-s.z/2000)*2.5);
+    if(px>0&&px<W&&py>0&&py<H){
+      const alpha=Math.min(1,(1-s.z/2000)*1.2);
+      const hue=s.x>0?180:320;
+      ctx.strokeStyle=`hsla(${hue},100%,80%,${alpha})`;
+      ctx.lineWidth=s.size;
+      ctx.beginPath();ctx.moveTo(ppx,ppy);ctx.lineTo(px,py);ctx.stroke();
+    }
+  });
+}
+
+// Floating energy orbs
+function drawOrbs(){
+  orbs.forEach(o=>{
+    o.angle+=o.speed;
+    const cx=W/2+(mx-W/2)*0.05;
+    const cy=H/2+(my-H/2)*0.05;
+    const x=cx+Math.cos(o.angle+time*0.001)*o.radius*(W/1400);
+    const y=cy+Math.sin(o.angle*1.3+time*0.0008)*o.radius*0.5*(H/800);
+    const pulse=1+Math.sin(time*0.05+o.angle)*0.3;
+    const r=o.size*pulse*8;
+    const grad=ctx.createRadialGradient(x,y,0,x,y,r*4);
+    grad.addColorStop(0,`rgba(${o.color},0.6)`);
+    grad.addColorStop(0.3,`rgba(${o.color},0.15)`);
+    grad.addColorStop(1,`rgba(${o.color},0)`);
+    ctx.beginPath();ctx.arc(x,y,r*4,0,Math.PI*2);
+    ctx.fillStyle=grad;ctx.fill();
+    // Core
+    ctx.beginPath();ctx.arc(x,y,r*0.6,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${o.color},0.9)`;ctx.fill();
+  });
+}
+
+// DNA double helix
+function drawDNA(){
+  const cx=W*0.85,cy=H/2,height=H*0.7,twist=time*0.02;
+  dna.forEach((p,i)=>{
+    const y=cy-height/2+p.t*height;
+    const x1=cx+Math.cos(p.t*Math.PI*4+twist)*40;
+    const x2=cx+Math.cos(p.t*Math.PI*4+twist+Math.PI)*40;
+    const alpha=0.15+Math.abs(Math.sin(p.t*Math.PI*4+twist))*0.3;
+    if(i>0){
+      const prev=dna[i-1];
+      const py=cy-height/2+prev.t*height;
+      const px1=cx+Math.cos(prev.t*Math.PI*4+twist)*40;
+      const px2=cx+Math.cos(prev.t*Math.PI*4+twist+Math.PI)*40;
+      ctx.strokeStyle=`rgba(0,245,255,${alpha})`;ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(px1,py);ctx.lineTo(x1,y);ctx.stroke();
+      ctx.strokeStyle=`rgba(255,0,170,${alpha})`;
+      ctx.beginPath();ctx.moveTo(px2,py);ctx.lineTo(x2,y);ctx.stroke();
+    }
+    if(i%5===0){
+      ctx.strokeStyle=`rgba(123,47,255,${alpha*0.8})`;ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x1,y);ctx.lineTo(x2,y);ctx.stroke();
+    }
+  });
+}
+
+// Hexagon grid pulse
+function drawHex(){
+  const size=35,rows=8,cols=6;
+  const offX=W*0.08,offY=H*0.1;
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const x=offX+c*size*1.75+(r%2)*size*0.875;
+      const y=offY+r*size*1.5;
+      const dist=Math.hypot(x-mx,y-my);
+      const pulse=Math.max(0,1-dist/300)*0.4+Math.sin(time*0.03+r+c)*0.05;
+      const alpha=0.04+pulse;
+      ctx.strokeStyle=`rgba(0,245,255,${alpha})`;ctx.lineWidth=1;
+      ctx.beginPath();
+      for(let i=0;i<6;i++){
+        const angle=i*Math.PI/3-Math.PI/6;
+        const hx=x+size*0.5*Math.cos(angle),hy=y+size*0.5*Math.sin(angle);
+        i===0?ctx.moveTo(hx,hy):ctx.lineTo(hx,hy);
+      }
+      ctx.closePath();ctx.stroke();
+      if(pulse>0.2){
+        ctx.fillStyle=`rgba(0,245,255,${pulse*0.08})`;ctx.fill();
+      }
+    }
+  }
+}
+
+// Scan line
+function drawScan(){
+  const y=(time*2)%H;
+  const grad=ctx.createLinearGradient(0,y-30,0,y+30);
+  grad.addColorStop(0,'rgba(0,245,255,0)');
+  grad.addColorStop(0.5,'rgba(0,245,255,0.04)');
+  grad.addColorStop(1,'rgba(0,245,255,0)');
+  ctx.fillStyle=grad;
+  ctx.fillRect(0,y-30,W,60);
+}
+
+function drawBg(){
+  ctx.clearRect(0,0,W,H);
+  drawGrid();
+  drawStars();
+  drawHex();
+  drawDNA();
+  drawOrbs();
+  drawScan();
+  time++;
+  requestAnimationFrame(drawBg);
+}
+drawBg();
+
+// TYPING
+const roles=['Web Applications 🌐','Mobile Apps 📱','3D Experiences 🧊','Browser Games 🎮','Full Stack Apps ⚡','AI-Powered Tools 🤖'];
+let ri=0,ci=0,del=false;
+const el=document.getElementById('typing');
+function type(){if(!el)return;const w=roles[ri];if(!del){el.textContent=w.slice(0,++ci);if(ci===w.length){del=true;setTimeout(type,1600);return}}else{el.textContent=w.slice(0,--ci);if(ci===0){del=false;ri=(ri+1)%roles.length}}setTimeout(type,del?55:105)}
+type();
+
+// PAGE NAVIGATION
+function showPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active-nav'));
+  const map={home:0,about:1,services:2,projects:3,skills:4,payment:5,animation:6,ai:7,contact:8};
+  document.querySelectorAll('.nav-btn')[map[p]]?.classList.add('active-nav');
+  window.scrollTo({top:0,behavior:'smooth'});
+  document.getElementById('navLinks').classList.remove('open');
+  if(p==='home') animateStats();
+  if(p==='animation'){
+    setTimeout(()=>{
+      initModel();
+    },50);
+  }
+}
+function toggleMenu(){document.getElementById('navLinks').classList.toggle('open')}
+
+// STAT COUNTERS
+function animateStats(){
+  document.querySelectorAll('.stat-num').forEach(el=>{
+    const t=+el.dataset.target,start=performance.now();
+    const anim=n=>{const pr=Math.min((n-start)/1400,1);el.textContent=Math.floor(t*pr);if(pr<1)requestAnimationFrame(anim);else el.textContent=t+'+';};
+    requestAnimationFrame(anim);
+  });
+}
+setTimeout(animateStats,400);
+
+// PAYMENT
+function selectPlan(plan){
+  document.getElementById('selectedPlanLabel').textContent='Selected: '+plan;
+  document.getElementById('paymentBox').scrollIntoView({behavior:'smooth'});
+}
+function switchPayTab(tab){
+  document.querySelectorAll('.pay-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.pay-panel').forEach(p=>p.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('panel-'+tab).classList.add('active');
+}
+function selectUPI(el){document.querySelectorAll('.upi-btn').forEach(b=>b.classList.remove('selected'));el.classList.add('selected')}
+function formatCard(el){let v=el.value.replace(/\D/g,'').substring(0,16);el.value=v.replace(/(.{4})/g,'$1 ').trim()}
+function processPayment(){
+  document.querySelectorAll('.pay-panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.pay-tab').forEach(t=>{t.classList.remove('active');t.disabled=true});
+  document.getElementById('paySuccess').style.display='block';
+}
+
+// CONTACT FORM
+async function sendMessage(){
+  const name=document.getElementById('contactName').value.trim();
+  const email=document.getElementById('contactEmail').value.trim();
+  const service=document.getElementById('contactService').value;
+  const msg=document.getElementById('contactMsg').value.trim();
+  if(!name||!email||!msg){alert('Please fill in your name, email, and message.');return;}
+  const btn=document.querySelector('.send-btn');
+  btn.textContent='Sending... ⏳';btn.disabled=true;
+  try{
+    const res=await fetch('https://api.web3forms.com/submit',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      body:JSON.stringify({
+        access_key:'ac99ce42-e5d5-4589-b7ab-cea3f01efe61',
+        name:name,
+        email:email,
+        subject:'New Client Message — S Full Stack Developer Website',
+        service:service||'Not specified',
+        message:msg
+      })
+    });
+    const data=await res.json();
+    if(data.success){
+      const suc=document.getElementById('formSuccess');
+      suc.style.display='block';
+      document.getElementById('contactName').value='';
+      document.getElementById('contactEmail').value='';
+      document.getElementById('contactMsg').value='';
+      document.getElementById('contactService').value='';
+      setTimeout(()=>suc.style.display='none',6000);
+    }else{
+      alert('Something went wrong. Please try again.');
+    }
+  }catch(e){
+    alert('Network error. Please check your connection.');
+  }
+  btn.textContent='⚡ SEND MESSAGE';btn.disabled=false;
+}
+
+// AI CHAT
+const GEMINI_KEY = 'AIzaSyADVIvUVXVF9n-vaiZMVJTeThCt-korfXw';
+const SYSTEM_CONTEXT = `You are the AI assistant for "S Full Stack Developer" — a professional freelance developer based in India. 
+You help answer client questions about:
+- Services: Full Stack Web Apps, Game Development, Mobile Apps (Android/iOS), 3D Websites, E-Commerce, AI Apps, Dashboards, APIs
+- Pricing: Basic from Rs 5000, Pro from Rs 15000, Enterprise from Rs 40000+
+- Contact: Phone: +91 8001334102, Email: skahil33999@gmail.com
+- Timeline: Basic 5 days, Pro 14 days, Enterprise 30 days
+- Payment: GPay, PhonePe, Paytm, Debit/Credit Card, Net Banking
+Be friendly, professional, and helpful. Keep replies concise and clear. Always encourage the client to get in touch.`;
+
+let chatHistory = [];
+
+async function sendChat(){
+  const input = document.getElementById('chatInput');
+  const msg = input.value.trim();
+  if(!msg) return;
+  input.value = '';
+  appendMsg(msg, 'user');
+  chatHistory.push({role:'user', parts:[{text: msg}]});
+  showTyping();
+  try{
+    const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        system_instruction:{parts:[{text: SYSTEM_CONTEXT}]},
+        contents: chatHistory
+      })
+    });
+    const data = await res.json();
+    removeTyping();
+    const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't process that. Please try again.";
+    appendMsg(reply, 'bot');
+    chatHistory.push({role:'model', parts:[{text: reply}]});
+  }catch(e){
+    removeTyping();
+    appendMsg('Network error. Please check your connection and try again.', 'bot');
+  }
+}
+
+function quickSend(msg){
+  document.getElementById('chatInput').value = msg;
+  sendChat();
+}
+
+function appendMsg(text, type){
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg ' + (type==='user' ? 'user-msg' : 'bot-msg');
+  div.innerHTML = `<div class="msg-avatar">${type==='user'?'👤':'🤖'}</div><div class="msg-bubble">${text.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function showTyping(){
+  const box = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'ai-msg bot-msg';
+  div.id = 'typingIndicator';
+  div.innerHTML = '<div class="msg-avatar">🤖</div><div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+}
+
+function removeTyping(){
+  const t = document.getElementById('typingIndicator');
+  if(t) t.remove();
+}
+
+function clearChat(){
+  chatHistory = [];
+  document.getElementById('chatMessages').innerHTML = '<div class="ai-msg bot-msg"><div class="msg-avatar">🤖</div><div class="msg-bubble">Chat cleared! How can I help you?</div></div>';
+}
+
+
+// ======= 3D MODEL ENGINE =======
+let mCanvas, mCtx, mW, mH, mT=0;
+let mDragX=0, mDragY=0, mRotX=0.3, mRotY=0, mIsDrag=false, mLastX=0, mLastY=0;
+let mAutoRotX=0, mAutoRotY=0, mScene='sphere', mFrame=null, mZoom=1;
+
+const models = {
+  sphere:  {name:'CYBER SPHERE', sub:'Interactive Holographic Model'},
+  diamond: {name:'DIAMOND CORE', sub:'Crystalline Structure'},
+  torus:   {name:'TORUS RING',   sub:'Infinite Loop Geometry'},
+  crystal: {name:'POWER CRYSTAL',sub:'Energy Resonance Form'},
+  robot:   {name:'ROBOT HEAD',   sub:'AI Entity Model'}
+};
+
+function initModel(){
+  mCanvas = document.getElementById('model3dCanvas');
+  if(!mCanvas) return;
+  mCtx = mCanvas.getContext('2d');
+  const sz = mCanvas.offsetWidth;
+  mCanvas.width = mCanvas.height = sz * window.devicePixelRatio;
+  mCtx.scale(window.devicePixelRatio, window.devicePixelRatio);
+  mW = mH = sz;
+
+  // Mouse/touch drag
+  mCanvas.onmousedown  = e=>{ mIsDrag=true; mLastX=e.offsetX; mLastY=e.offsetY; mCanvas.style.cursor='grabbing'; };
+  mCanvas.onmousemove  = e=>{ if(!mIsDrag) return; mRotY+=(e.offsetX-mLastX)*0.012; mRotX+=(e.offsetY-mLastY)*0.012; mLastX=e.offsetX; mLastY=e.offsetY; };
+  mCanvas.onmouseup    = ()=>{ mIsDrag=false; mCanvas.style.cursor='grab'; };
+  mCanvas.onmouseleave = ()=>{ mIsDrag=false; };
+  mCanvas.onwheel      = e=>{ mZoom=Math.max(0.5,Math.min(2,mZoom-e.deltaY*0.001)); e.preventDefault(); };
+
+  // Touch
+  let lastTouch=null;
+  mCanvas.ontouchstart = e=>{ lastTouch=e.touches[0]; };
+  mCanvas.ontouchmove  = e=>{ if(!lastTouch)return; mRotY+=(e.touches[0].clientX-lastTouch.clientX)*0.012; mRotX+=(e.touches[0].clientY-lastTouch.clientY)*0.012; lastTouch=e.touches[0]; e.preventDefault(); },{passive:false};
+
+  if(!mFrame) modelLoop();
+}
+
+// 3D projection
+function project(x,y,z,cx,cy,fov){
+  const scale=fov/(fov+z);
+  return { x:cx+x*scale*mZoom, y:cy+y*scale*mZoom, z:z, scale };
+}
+
+// Rotate point
+function rotate(x,y,z,rx,ry){
+  // Y rotation
+  let tx=x*Math.cos(ry)-z*Math.sin(ry), tz=x*Math.sin(ry)+z*Math.cos(ry);
+  x=tx; z=tz;
+  // X rotation
+  let ty=y*Math.cos(rx)-z*Math.sin(rx); tz=y*Math.sin(rx)+z*Math.cos(rx);
+  return {x, y:ty, z:tz};
+}
+
+// Draw glowing point
+function glowDot(x,y,r,color,alpha){
+  const g=mCtx.createRadialGradient(x,y,0,x,y,r*3);
+  g.addColorStop(0,color.replace(')',`,${alpha})`).replace('rgb','rgba'));
+  g.addColorStop(1,color.replace(')',',0)').replace('rgb','rgba'));
+  mCtx.beginPath(); mCtx.arc(x,y,r*3,0,Math.PI*2);
+  mCtx.fillStyle=g; mCtx.fill();
+  mCtx.beginPath(); mCtx.arc(x,y,r,0,Math.PI*2);
+  mCtx.fillStyle=color.replace(')',`,${alpha})`).replace('rgb','rgba'); mCtx.fill();
+}
+
+// BG environment
+function drawEnvBg(){
+  // Deep space gradient
+  const bg=mCtx.createRadialGradient(mW/2,mH/2,0,mW/2,mH/2,mW*0.8);
+  bg.addColorStop(0,'rgba(10,5,30,1)');
+  bg.addColorStop(0.5,'rgba(4,8,15,1)');
+  bg.addColorStop(1,'rgba(0,0,0,1)');
+  mCtx.fillStyle=bg; mCtx.fillRect(0,0,mW,mH);
+
+  // Star field
+  for(let i=0;i<80;i++){
+    const sx=(Math.sin(i*432.1+mT*0.001)*0.5+0.5)*mW;
+    const sy=(Math.cos(i*321.4+mT*0.0008)*0.5+0.5)*mH;
+    const sa=0.3+Math.sin(i+mT*0.02)*0.2;
+    mCtx.beginPath(); mCtx.arc(sx,sy,0.8,0,Math.PI*2);
+    mCtx.fillStyle=`rgba(180,220,255,${sa})`; mCtx.fill();
+  }
+
+  // Ground reflection
+  const gr=mCtx.createLinearGradient(0,mH*0.7,0,mH);
+  gr.addColorStop(0,'rgba(0,245,255,0)');
+  gr.addColorStop(0.5,'rgba(0,245,255,0.03)');
+  gr.addColorStop(1,'rgba(0,245,255,0)');
+  mCtx.fillStyle=gr; mCtx.fillRect(0,mH*0.7,mW,mH*0.3);
+}
+
+// === SPHERE model ===
+function drawSphere(){
+  const cx=mW/2, cy=mH/2, R=mW*0.28;
+  const rx=mRotX+(mIsDrag?0:mT*0.005), ry=mRotY+(mIsDrag?0:mT*0.008);
+
+  // Latitude/longitude wireframe
+  const lines=14;
+  for(let i=0;i<lines;i++){
+    const lat=(i/lines)*Math.PI-Math.PI/2;
+    const r2=Math.cos(lat)*R, y0=Math.sin(lat)*R;
+    const pts=[];
+    for(let j=0;j<=40;j++){
+      const lon=(j/40)*Math.PI*2;
+      const p=rotate(Math.cos(lon)*r2, y0, Math.sin(lon)*r2, rx, ry);
+      pts.push(project(p.x,p.y,p.z,cx,cy,400));
+    }
+    const alpha=0.08+0.12*(Math.sin(lat+mT*0.02)*0.5+0.5);
+    mCtx.beginPath();
+    pts.forEach((p,j)=>j===0?mCtx.moveTo(p.x,p.y):mCtx.lineTo(p.x,p.y));
+    mCtx.strokeStyle=`rgba(0,245,255,${alpha})`; mCtx.lineWidth=0.8; mCtx.stroke();
+  }
+  for(let i=0;i<lines;i++){
+    const lon=(i/lines)*Math.PI*2;
+    const pts=[];
+    for(let j=0;j<=40;j++){
+      const lat=(j/40)*Math.PI*2;
+      const p=rotate(Math.cos(lon)*Math.cos(lat)*R, Math.sin(lat)*R, Math.sin(lon)*Math.cos(lat)*R, rx, ry);
+      pts.push(project(p.x,p.y,p.z,cx,cy,400));
+    }
+    const alpha=0.08+0.12*(Math.sin(lon+mT*0.015)*0.5+0.5);
+    mCtx.beginPath();
+    pts.forEach((p,j)=>j===0?mCtx.moveTo(p.x,p.y):mCtx.lineTo(p.x,p.y));
+    mCtx.strokeStyle=`rgba(255,0,170,${alpha})`; mCtx.lineWidth=0.8; mCtx.stroke();
+  }
+
+  // Glowing nodes on surface
+  for(let i=0;i<20;i++){
+    const lat=(i/20)*Math.PI-Math.PI/2, lon=(i*137.5/180)*Math.PI;
+    const p=rotate(Math.cos(lon)*Math.cos(lat)*R, Math.sin(lat)*R, Math.sin(lon)*Math.cos(lat)*R, rx, ry);
+    const pr=project(p.x,p.y,p.z,cx,cy,400);
+    if(p.z>-R*0.3){
+      const a=0.4+(p.z/R)*0.5;
+      glowDot(pr.x,pr.y,2.5,`rgb(0,245,255)`,a);
+    }
+  }
+
+  // Center core glow
+  const core=mCtx.createRadialGradient(cx,cy,0,cx,cy,R*0.5);
+  core.addColorStop(0,'rgba(0,245,255,0.06)');
+  core.addColorStop(1,'rgba(0,245,255,0)');
+  mCtx.beginPath(); mCtx.arc(cx,cy,R*0.5,0,Math.PI*2);
+  mCtx.fillStyle=core; mCtx.fill();
+
+  // Reflection ring
+  mCtx.beginPath();
+  mCtx.ellipse(cx,cy+R*0.85,R*0.4,R*0.06,0,0,Math.PI*2);
+  const rg=mCtx.createRadialGradient(cx,cy+R*0.85,0,cx,cy+R*0.85,R*0.4);
+  rg.addColorStop(0,'rgba(0,245,255,0.15)'); rg.addColorStop(1,'rgba(0,245,255,0)');
+  mCtx.fillStyle=rg; mCtx.fill();
+}
+
+// === DIAMOND model ===
+function drawDiamond(){
+  const cx=mW/2, cy=mH/2, S=mW*0.22;
+  const rx=mRotX+(mIsDrag?0:mT*0.006), ry=mRotY+(mIsDrag?0:mT*0.009);
+  const verts=[
+    {x:0,y:-S*1.4,z:0},
+    {x:S,y:0,z:0},{x:0,y:0,z:S},{x:-S,y:0,z:0},{x:0,y:0,z:-S},
+    {x:S*0.7,y:0,z:S*0.7},{x:-S*0.7,y:0,z:S*0.7},{x:-S*0.7,y:0,z:-S*0.7},{x:S*0.7,y:0,z:-S*0.7},
+    {x:0,y:S*0.9,z:0}
+  ];
+  const faces=[
+    [0,1,5],[0,5,2],[0,2,6],[0,6,3],[0,3,7],[0,7,4],[0,4,8],[0,8,1],
+    [9,1,5],[9,5,2],[9,2,6],[9,6,3],[9,3,7],[9,7,4],[9,4,8],[9,8,1]
+  ];
+  const proj=verts.map(v=>{
+    const r=rotate(v.x,v.y,v.z,rx,ry);
+    return project(r.x,r.y,r.z,cx,cy,400);
+  });
+  const sorted=[...faces].sort((a,b)=>{
+    const za=(proj[a[0]].z+proj[a[1]].z+proj[a[2]].z)/3;
+    const zb=(proj[b[0]].z+proj[b[1]].z+proj[b[2]].z)/3;
+    return zb-za;
+  });
+  sorted.forEach((f,fi)=>{
+    const p0=proj[f[0]],p1=proj[f[1]],p2=proj[f[2]];
+    const avgZ=(p0.z+p1.z+p2.z)/3;
+    const brightness=(avgZ+S*2)/(S*4);
+    const hue=180+fi*8;
+    mCtx.beginPath();
+    mCtx.moveTo(p0.x,p0.y); mCtx.lineTo(p1.x,p1.y); mCtx.lineTo(p2.x,p2.y);
+    mCtx.closePath();
+    mCtx.fillStyle=`hsla(${hue},100%,60%,${brightness*0.15+0.02})`;
+    mCtx.fill();
+    mCtx.strokeStyle=`hsla(${hue},100%,80%,${brightness*0.6+0.1})`;
+    mCtx.lineWidth=0.8; mCtx.stroke();
+  });
+  // Sparkles
+  for(let i=0;i<8;i++){
+    const angle=(mT*0.03+i*(Math.PI*2/8));
+    const r2=S*0.6;
+    const p=rotate(Math.cos(angle)*r2,Math.sin(angle*0.7)*S*0.3,Math.sin(angle)*r2,rx,ry);
+    const pr=project(p.x,p.y,p.z,cx,cy,400);
+    glowDot(pr.x,pr.y,2,`rgb(180,220,255)`,0.7);
+  }
+}
+
+// === TORUS model ===
+function drawTorus(){
+  const cx=mW/2, cy=mH/2, R=mW*0.2, r=mW*0.08;
+  const rx=mRotX+(mIsDrag?0:mT*0.004+0.5), ry=mRotY+(mIsDrag?0:mT*0.007);
+  const segs=32, tubes=20;
+  const pts=[];
+  for(let i=0;i<segs;i++){
+    const u=(i/segs)*Math.PI*2;
+    const row=[];
+    for(let j=0;j<tubes;j++){
+      const v=(j/tubes)*Math.PI*2;
+      const x=(R+r*Math.cos(v))*Math.cos(u);
+      const y=r*Math.sin(v);
+      const z=(R+r*Math.cos(v))*Math.sin(u);
+      const p=rotate(x,y,z,rx,ry);
+      row.push(project(p.x,p.y,p.z,cx,cy,400));
+    }
+    pts.push(row);
+  }
+  // Draw quads sorted by Z
+  const quads=[];
+  for(let i=0;i<segs;i++){
+    for(let j=0;j<tubes;j++){
+      const ni=(i+1)%segs, nj=(j+1)%tubes;
+      const p0=pts[i][j],p1=pts[ni][j],p2=pts[ni][nj],p3=pts[i][nj];
+      const avgZ=(p0.z+p1.z+p2.z+p3.z)/4;
+      quads.push({p0,p1,p2,p3,z:avgZ,i,j});
+    }
+  }
+  quads.sort((a,b)=>b.z-a.z);
+  quads.forEach(q=>{
+    const bright=(q.z+R+r*2)/(R+r)*2+0.1;
+    const hue=200+q.i*4+mT*0.2;
+    mCtx.beginPath();
+    mCtx.moveTo(q.p0.x,q.p0.y); mCtx.lineTo(q.p1.x,q.p1.y);
+    mCtx.lineTo(q.p2.x,q.p2.y); mCtx.lineTo(q.p3.x,q.p3.y);
+    mCtx.closePath();
+    mCtx.fillStyle=`hsla(${hue},100%,55%,${Math.min(0.25,bright*0.08)})`;
+    mCtx.fill();
+    mCtx.strokeStyle=`hsla(${hue},100%,75%,${Math.min(0.5,bright*0.15)})`;
+    mCtx.lineWidth=0.5; mCtx.stroke();
+  });
+}
+
+// === CRYSTAL model ===
+function drawCrystal(){
+  const cx=mW/2, cy=mH/2, S=mW*0.22;
+  const rx=mRotX+(mIsDrag?0:mT*0.005), ry=mRotY+(mIsDrag?0:mT*0.007);
+  const verts=[
+    {x:0,y:-S*1.5,z:0},
+    {x:S*0.7,y:-S*0.3,z:0},{x:0,y:-S*0.3,z:S*0.7},{x:-S*0.7,y:-S*0.3,z:0},{x:0,y:-S*0.3,z:-S*0.7},
+    {x:S*0.5,y:S*0.5,z:S*0.5},{x:-S*0.5,y:S*0.5,z:S*0.5},{x:-S*0.5,y:S*0.5,z:-S*0.5},{x:S*0.5,y:S*0.5,z:-S*0.5},
+    {x:0,y:S*1.2,z:0}
+  ];
+  const faces=[
+    [0,1,2],[0,2,3],[0,3,4],[0,4,1],
+    [1,2,5],[2,3,6],[3,4,7],[4,1,8],
+    [5,6,9],[6,7,9],[7,8,9],[8,5,9],
+    [1,5,8],[2,5,6],[3,6,7],[4,7,8]
+  ];
+  const proj=verts.map(v=>{
+    const r=rotate(v.x,v.y,v.z,rx,ry);
+    return project(r.x,r.y,r.z,cx,cy,400);
+  });
+  const sorted=[...faces].sort((a,b)=>{
+    const za=(proj[a[0]].z+proj[a[1]].z+proj[a[2]].z)/3;
+    const zb=(proj[b[0]].z+proj[b[1]].z+proj[b[2]].z)/3;
+    return zb-za;
+  });
+  sorted.forEach((f,fi)=>{
+    const p0=proj[f[0]],p1=proj[f[1]],p2=proj[f[2]];
+    const avgZ=(p0.z+p1.z+p2.z)/3;
+    const b=(avgZ+S*2)/(S*4);
+    const colors=['rgba(100,0,255,','rgba(180,0,255,','rgba(255,0,170,','rgba(0,200,255,'];
+    const c=colors[fi%colors.length];
+    mCtx.beginPath();
+    mCtx.moveTo(p0.x,p0.y); mCtx.lineTo(p1.x,p1.y); mCtx.lineTo(p2.x,p2.y);
+    mCtx.closePath();
+    mCtx.fillStyle=c+(b*0.3+0.05)+')'; mCtx.fill();
+    mCtx.strokeStyle=c+(b*0.8+0.15)+')'; mCtx.lineWidth=1; mCtx.stroke();
+  });
+  // Inner glow
+  const ig=mCtx.createRadialGradient(cx,cy,0,cx,cy,S*0.5);
+  ig.addColorStop(0,`rgba(180,0,255,${0.1+Math.sin(mT*0.05)*0.05})`);
+  ig.addColorStop(1,'rgba(0,0,0,0)');
+  mCtx.fillStyle=ig; mCtx.beginPath(); mCtx.arc(cx,cy,S*0.5,0,Math.PI*2); mCtx.fill();
+}
+
+// === ROBOT HEAD ===
+function drawRobot(){
+  const cx=mW/2, cy=mH/2, S=mW*0.18;
+  const rx=mRotX+(mIsDrag?0:Math.sin(mT*0.01)*0.3);
+  const ry=mRotY+(mIsDrag?0:mT*0.006);
+
+  function drawFace(verts,edges,color){
+    const proj=verts.map(v=>{
+      const r=rotate(v.x,v.y,v.z,rx,ry);
+      return project(r.x,r.y,r.z,cx,cy,400);
+    });
+    edges.forEach(e=>{
+      const p0=proj[e[0]],p1=proj[e[1]];
+      const avgZ=(p0.z+p1.z)/2;
+      const alpha=0.2+(avgZ+S*3)/(S*6)*0.6;
+      mCtx.beginPath(); mCtx.moveTo(p0.x,p0.y); mCtx.lineTo(p1.x,p1.y);
+      mCtx.strokeStyle=color.replace(')',`,${Math.max(0.1,alpha)})`); mCtx.lineWidth=1.5; mCtx.stroke();
+    });
+    return proj;
+  }
+
+  // Head box
+  const hw=S,hh=S*1.1,hd=S;
+  const head=[
+    {x:-hw,y:-hh,z:-hd},{x:hw,y:-hh,z:-hd},{x:hw,y:hh,z:-hd},{x:-hw,y:hh,z:-hd},
+    {x:-hw,y:-hh,z:hd},{x:hw,y:-hh,z:hd},{x:hw,y:hh,z:hd},{x:-hw,y:hh,z:hd}
+  ];
+  const headEdges=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
+  drawFace(head,headEdges,'rgba(0,245,255)');
+
+  // Eyes
+  const eyeL=rotate(-S*0.4,-S*0.1,-hd-1,rx,ry);
+  const eyeR=rotate(S*0.4,-S*0.1,-hd-1,rx,ry);
+  const el=project(eyeL.x,eyeL.y,eyeL.z,cx,cy,400);
+  const er=project(eyeR.x,eyeR.y,eyeR.z,cx,cy,400);
+  const eyePulse=0.7+Math.sin(mT*0.08)*0.3;
+  glowDot(el.x,el.y,5,`rgb(0,255,100)`,eyePulse);
+  glowDot(er.x,er.y,5,`rgb(0,255,100)`,eyePulse);
+
+  // Antenna
+  const ant=[
+    {x:0,y:-hh,z:0},{x:0,y:-hh-S*0.5,z:0}
+  ];
+  const antProj=ant.map(v=>{const r=rotate(v.x,v.y,v.z,rx,ry);return project(r.x,r.y,r.z,cx,cy,400);});
+  mCtx.beginPath(); mCtx.moveTo(antProj[0].x,antProj[0].y); mCtx.lineTo(antProj[1].x,antProj[1].y);
+  mCtx.strokeStyle='rgba(255,200,0,0.7)'; mCtx.lineWidth=2; mCtx.stroke();
+  glowDot(antProj[1].x,antProj[1].y,4,`rgb(255,200,0)`,0.8+Math.sin(mT*0.1)*0.2);
+
+  // Mouth scan line
+  const mleft=rotate(-S*0.5,S*0.4,-hd-1,rx,ry);
+  const mright=rotate(S*0.5,S*0.4,-hd-1,rx,ry);
+  const ml=project(mleft.x,mleft.y,mleft.z,cx,cy,400);
+  const mr=project(mright.x,mright.y,mright.z,cx,cy,400);
+  const scanAlpha=0.5+Math.sin(mT*0.06)*0.4;
+  mCtx.beginPath(); mCtx.moveTo(ml.x,ml.y); mCtx.lineTo(mr.x,mr.y);
+  mCtx.strokeStyle=`rgba(0,245,255,${scanAlpha})`; mCtx.lineWidth=2.5; mCtx.stroke();
+}
+
+function modelLoop(){
+  if(!mCanvas||!mCtx){mFrame=requestAnimationFrame(modelLoop);return;}
+  drawEnvBg();
+  switch(mScene){
+    case 'sphere':  drawSphere();  break;
+    case 'diamond': drawDiamond(); break;
+    case 'torus':   drawTorus();   break;
+    case 'crystal': drawCrystal(); break;
+    case 'robot':   drawRobot();   break;
+  }
+  mT++;
+  mFrame=requestAnimationFrame(modelLoop);
+}
+
+function setScene(s){
+  mScene=s;
+  document.querySelectorAll('.anim-ctrl-btn').forEach(b=>b.classList.remove('active-scene'));
+  const btn=document.getElementById('btn-'+s);
+  if(btn) btn.classList.add('active-scene');
+  const m=models[s];
+  if(m){
+    document.getElementById('modelName').textContent=m.name;
+    document.getElementById('modelSub').textContent=m.sub;
+  }
+  mRotX=0.3; mRotY=0;
+}
+
+// Start when animation page opens (handled in main showPage)
+</script>
+</body>
+</html>
