@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXUS — Immersive Digital Experience Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<style>
+  :root{
+    --bg:#06060F;
+    --bg-2:#0C0D1E;
+    --violet:#8B5CF6;
+    --cyan:#22D3EE;
+    --pink:#F472B6;
+    --white:#F2F1F8;
+    --dim:#8B8AA3;
+    --glass:rgba(255,255,255,0.05);
+    --glass-border:rgba(255,255,255,0.12);
+    --ease:cubic-bezier(.16,1,.3,1);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg);
+    color:var(--white);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    cursor:none;
+  }
+  @media (max-width:900px){ body{ cursor:auto; } }
+  ::selection{ background:var(--violet); color:#fff; }
+  a{ color:inherit; text-decoration:none; }
+
+  h1,h2,h3,.display{
+    font-family:'Space Grotesk',sans-serif;
+    font-weight:600;
+    letter-spacing:-0.01em;
+    line-height:1.05;
+  }
+  .mono{
+    font-family:'JetBrains Mono',monospace;
+    text-transform:uppercase;
+    letter-spacing:0.16em;
+    font-size:11px;
+    color:var(--cyan);
+  }
+  .grad-text{
+    background:linear-gradient(100deg,var(--violet),var(--cyan) 60%,var(--pink));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  /* ---------- custom cursor ---------- */
+  #cursor-dot, #cursor-ring{
+    position:fixed; top:0; left:0;
+    border-radius:50%;
+    pointer-events:none;
+    z-index:9999;
+    transform:translate(-50%,-50%);
+  }
+  #cursor-dot{ width:6px; height:6px; background:var(--cyan); box-shadow:0 0 12px 2px var(--cyan); }
+  #cursor-ring{ width:34px; height:34px; border:1px solid rgba(139,92,246,0.6); transition:width .25s var(--ease), height .25s var(--ease), border-color .25s var(--ease); }
+  #cursor-ring.hover{ width:56px; height:56px; border-color:var(--cyan); background:rgba(34,211,238,0.08); }
+  @media (max-width:900px){ #cursor-dot,#cursor-ring{ display:none; } }
+
+  /* ---------- particle net background ---------- */
+  #particles{ position:fixed; inset:0; z-index:0; opacity:0.55; }
+  #hero-canvas{ position:fixed; top:0; left:0; width:100%; height:100%; z-index:1; pointer-events:none; }
+
+  /* ---------- nav ---------- */
+  nav{
+    position:fixed; top:0; left:0; right:0; z-index:200;
+    display:flex; justify-content:space-between; align-items:center;
+    padding:24px 48px;
+    backdrop-filter:blur(10px);
+    background:linear-gradient(180deg, rgba(6,6,15,0.7), transparent);
+  }
+  .logo{ font-family:'Space Grotesk',sans-serif; font-size:20px; font-weight:700; letter-spacing:0.01em; display:flex; align-items:center; gap:8px; cursor:pointer; }
+  .logo .dot3d{ width:9px; height:9px; border-radius:50%; background:var(--violet); box-shadow:0 0 14px 3px var(--violet); }
+  .nav-links{ display:flex; gap:36px; list-style:none; }
+  .nav-links li{ font-family:'JetBrains Mono',monospace; font-size:11.5px; text-transform:uppercase; letter-spacing:0.1em; color:var(--dim); cursor:pointer; position:relative; padding-bottom:4px; transition:color .3s var(--ease); }
+  .nav-links li::after{ content:''; position:absolute; bottom:0; left:0; width:0; height:1px; background:linear-gradient(90deg,var(--violet),var(--cyan)); transition:width .35s var(--ease); }
+  .nav-links li:hover, .nav-links li.active{ color:var(--white); }
+  .nav-links li:hover::after, .nav-links li.active::after{ width:100%; }
+  .nav-cta{
+    font-family:'JetBrains Mono',monospace; font-size:11px; text-transform:uppercase; letter-spacing:0.08em;
+    padding:11px 22px; border:1px solid var(--glass-border); border-radius:100px;
+    background:var(--glass); cursor:pointer; transition:all .3s var(--ease);
+  }
+  .nav-cta:hover{ border-color:var(--cyan); box-shadow:0 0 20px rgba(34,211,238,0.25); }
+
+  /* ---------- pages ---------- */
+  .page{ position:relative; z-index:10; min-height:100vh; display:none; }
+  .page.active{ display:block; }
+
+  .wrap{ max-width:1280px; margin:0 auto; padding:0 48px; }
+
+  /* ===== HOME ===== */
+  #home .hero{ min-height:100vh; display:flex; flex-direction:column; justify-content:center; padding-top:60px; }
+  .eyebrow{ display:flex; align-items:center; gap:12px; margin-bottom:26px; }
+  .eyebrow .pill{ padding:6px 14px; border:1px solid var(--glass-border); border-radius:100px; background:var(--glass); }
+  .hero h1{ font-size:clamp(46px,7.6vw,104px); max-width:15ch; overflow:hidden; }
+  .hero h1 .line{ display:block; overflow:hidden; }
+  .hero h1 .line span{ display:inline-block; will-change:transform; }
+  .hero-sub{ margin-top:30px; max-width:540px; font-size:17px; line-height:1.7; color:var(--dim); font-weight:300; opacity:0; }
+  .hero-actions{ margin-top:44px; display:flex; gap:20px; align-items:center; opacity:0; }
+  .btn-primary{
+    padding:16px 32px; border-radius:100px; font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.1em;
+    background:linear-gradient(100deg,var(--violet),var(--cyan)); color:#06060F; font-weight:600; cursor:pointer; border:none;
+    box-shadow:0 0 30px rgba(139,92,246,0.35);
+    transition:transform .3s var(--ease), box-shadow .3s var(--ease);
+  }
+  .btn-primary:hover{ transform:translateY(-3px); box-shadow:0 8px 40px rgba(34,211,238,0.45); }
+  .btn-ghost{ font-family:'JetBrains Mono',monospace; font-size:12px; text-transform:uppercase; letter-spacing:0.1em; color:var(--dim); cursor:pointer; border-bottom:1px solid var(--glass-border); padding-bottom:4px; transition:color .3s; }
+  .btn-ghost:hover{ color:var(--white); border-color:var(--cyan); }
+
+  .stat-strip{ display:flex; gap:60px; margin-top:90px; opacity:0; }
+  .stat-strip div strong{ display:block; font-family:'Space Grotesk',sans-serif; font-size:32px; }
+  .stat-strip div span{ font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; color:var(--dim); letter-spacing:0.08em; }
+
+  section.block{ padding:150px 0; border-top:1px solid var(--glass-border); }
+  .block-head{ display:flex; justify-content:space-between; align-items:flex-end; margin-bottom:60px; gap:40px; flex-wrap:wrap; }
+  .block-head h2{ font-size:clamp(30px,4vw,46px); max-width:12ch; }
+  .block-head p{ max-width:360px; color:var(--dim); font-size:14px; line-height:1.6; font-weight:300; }
+
+  /* ===== ABOUT ===== */
+  #about .wrap{ padding-top:170px; padding-bottom:100px; }
+  .milestones{ display:grid; grid-template-columns:repeat(4,1fr); gap:24px; }
+  .m-card{
+    padding:32px 26px; border-radius:20px; background:var(--glass); border:1px solid var(--glass-border);
+    backdrop-filter:blur(6px); opacity:0; transform:translateY(60px) rotateX(20deg); transform-style:preserve-3d;
+  }
+  .m-card .yr{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--cyan); letter-spacing:0.1em; }
+  .m-card h3{ font-size:22px; margin:14px 0 10px; }
+  .m-card p{ font-size:13.5px; color:var(--dim); line-height:1.6; font-weight:300; }
+
+  .about-story{ display:grid; grid-template-columns:1.1fr 0.9fr; gap:80px; margin-top:150px; }
+  .about-story h2{ font-size:clamp(30px,4vw,44px); max-width:11ch; margin-bottom:26px; }
+  .about-story p{ color:var(--dim); font-size:15.5px; line-height:1.8; font-weight:300; margin-bottom:18px; }
+  .team-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:20px; }
+  .team-card{ padding:24px; border-radius:18px; background:var(--glass); border:1px solid var(--glass-border); }
+  .team-card .ava{ width:44px; height:44px; border-radius:50%; background:linear-gradient(135deg,var(--violet),var(--cyan)); margin-bottom:14px; }
+  .team-card h4{ font-family:'Space Grotesk',sans-serif; font-size:15px; margin-bottom:2px; }
+  .team-card span{ font-family:'JetBrains Mono',monospace; font-size:10px; color:var(--dim); text-transform:uppercase; letter-spacing:0.06em; }
+
+  /* ===== SERVICES ===== */
+  #services .wrap{ padding-top:170px; padding-bottom:130px; }
+  .service-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:24px; perspective:1200px; }
+  .service-card{
+    position:relative; padding:38px; border-radius:22px; background:var(--glass); border:1px solid var(--glass-border);
+    cursor:pointer; overflow:hidden; transition:border-color .3s var(--ease), background .3s var(--ease);
+    transform-style:preserve-3d;
+  }
+  .service-card::before{
+    content:''; position:absolute; inset:0; opacity:0; transition:opacity .4s var(--ease);
+    background:radial-gradient(circle at var(--mx,50%) var(--my,50%), rgba(139,92,246,0.25), transparent 60%);
+  }
+  .service-card:hover::before{ opacity:1; }
+  .service-card:hover{ border-color:rgba(139,92,246,0.5); }
+  .service-card .num{ font-family:'JetBrains Mono',monospace; font-size:11px; color:var(--cyan); }
+  .service-card h3{ font-size:26px; margin:20px 0 12px; }
+  .service-card p{ color:var(--dim); font-size:14px; line-height:1.6; font-weight:300; margin-bottom:20px; }
+  .service-details{ max-height:0; overflow:hidden; transition:max-height .5s var(--ease); }
+  .service-card:hover .service-details{ max-height:120px; }
+  .service-tiers{ display:flex; gap:14px; padding-top:14px; border-top:1px solid var(--glass-border); }
+  .service-tiers span{ font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--dim); padding:6px 12px; border:1px solid var(--glass-border); border-radius:100px; }
+
+  /* ===== PORTFOLIO / 3D CAROUSEL ===== */
+  #portfolio .wrap{ padding-top:170px; padding-bottom:80px; }
+  .carousel-stage{ position:relative; height:460px; margin:70px 0 40px; perspective:1400px; }
+  .carousel-track{ position:absolute; inset:0; transform-style:preserve-3d; transition:transform .7s var(--ease); }
+  .carousel-item{
+    position:absolute; top:50%; left:50%; width:340px; height:420px;
+    margin:-210px 0 0 -170px;
+    border-radius:24px; background:linear-gradient(160deg, var(--bg-2), #0a0b18);
+    border:1px solid var(--glass-border);
+    padding:28px; display:flex; flex-direction:column; justify-content:flex-end;
+    backface-visibility:hidden; cursor:pointer;
+    transition:box-shadow .4s var(--ease);
+  }
+  .carousel-item .glow{ position:absolute; top:0; left:0; right:0; height:60%; border-radius:24px 24px 0 0; opacity:0.5; }
+  .carousel-item h3{ font-size:22px; margin-bottom:8px; position:relative; }
+  .carousel-item .sys{ font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; color:var(--cyan); letter-spacing:0.08em; position:relative; }
+  .carousel-item.center{ box-shadow:0 20px 80px rgba(139,92,246,0.35); }
+  .carousel-controls{ display:flex; justify-content:center; gap:20px; }
+  .c-btn{
+    width:48px; height:48px; border-radius:50%; border:1px solid var(--glass-border); background:var(--glass);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px; transition:all .3s var(--ease);
+  }
+  .c-btn:hover{ border-color:var(--cyan); box-shadow:0 0 20px rgba(34,211,238,0.3); }
+
+  /* ===== PRICING / PAYMENT (DEMO) ===== */
+  #payment .wrap{ padding-top:170px; padding-bottom:130px; }
+  .demo-note{
+    margin-top:14px; margin-bottom:50px; padding:14px 18px; border-radius:12px; background:rgba(244,114,182,0.08);
+    border:1px solid rgba(244,114,182,0.3); font-size:12.5px; color:var(--dim); max-width:640px; line-height:1.6;
+  }
+  .demo-note strong{ color:var(--pink); }
+  .plans{ display:grid; grid-template-columns:repeat(3,1fr); gap:24px; margin-bottom:100px; }
+  .plan{ padding:36px 30px; border-radius:22px; background:var(--glass); border:1px solid var(--glass-border); cursor:pointer; transition:all .3s var(--ease); }
+  .plan.selected{ border-color:var(--cyan); box-shadow:0 0 40px rgba(34,211,238,0.2); background:rgba(34,211,238,0.05); }
+  .plan .mono{ margin-bottom:16px; display:block; }
+  .plan .price{ font-family:'Space Grotesk',sans-serif; font-size:40px; margin-bottom:6px; }
+  .plan .price span{ font-size:14px; color:var(--dim); font-family:'Inter',sans-serif; }
+  .plan ul{ list-style:none; margin-top:22px; display:flex; flex-direction:column; gap:10px; }
+  .plan li{ font-size:13px; color:var(--dim); padding-left:18px; position:relative; }
+  .plan li::before{ content:'—'; position:absolute; left:0; color:var(--violet); }
+
+  .currency-toggle{ display:inline-flex; gap:2px; padding:4px; border-radius:100px; background:var(--glass); border:1px solid var(--glass-border); margin-bottom:20px; }
+  .currency-toggle span{ padding:8px 16px; border-radius:100px; font-family:'JetBrains Mono',monospace; font-size:11px; cursor:pointer; color:var(--dim); transition:all .25s; }
+  .currency-toggle span.active{ background:linear-gradient(100deg,var(--violet),var(--cyan)); color:#06060F; }
+
+  .checkout-grid{ display:grid; grid-template-columns:1fr 1fr; gap:70px; align-items:start; }
+
+  .card-3d-wrap{ perspective:1000px; margin-bottom:40px; }
+  .card-3d{
+    width:100%; max-width:400px; aspect-ratio:1.586/1; border-radius:20px; position:relative; transform-style:preserve-3d;
+    transition:transform .6s var(--ease);
+    background:linear-gradient(135deg, #1a1b35, #0c0d1e);
+    border:1px solid var(--glass-border);
+    padding:26px; display:flex; flex-direction:column; justify-content:space-between;
+    box-shadow:0 30px 60px rgba(0,0,0,0.5);
+  }
+  .card-3d.flipped{ transform:rotateY(180deg); }
+  .card-face{ position:absolute; inset:0; padding:26px; display:flex; flex-direction:column; justify-content:space-between; backface-visibility:hidden; border-radius:20px; }
+  .card-face.back{ transform:rotateY(180deg); background:linear-gradient(135deg,#1a1b35,#0c0d1e); }
+  .card-3d .chip{ width:42px; height:32px; border-radius:6px; background:linear-gradient(135deg,var(--cyan),var(--violet)); opacity:0.85; }
+  .card-3d .brand{ font-family:'Space Grotesk',sans-serif; font-weight:700; letter-spacing:0.05em; font-size:15px; text-align:right; }
+  .card-3d .num{ font-family:'JetBrains Mono',monospace; font-size:21px; letter-spacing:0.14em; margin:14px 0; }
+  .card-3d .row{ display:flex; justify-content:space-between; }
+  .card-3d .lbl{ font-family:'JetBrains Mono',monospace; font-size:8.5px; text-transform:uppercase; color:var(--dim); letter-spacing:0.08em; margin-bottom:4px; }
+  .card-3d .val{ font-family:'Space Grotesk',sans-serif; font-size:14px; letter-spacing:0.03em; text-transform:uppercase; }
+  .card-face.back .stripe{ height:44px; background:#000; margin-top:20px; }
+  .card-face.back .cvc-box{ margin-top:20px; background:#fff; color:#111; padding:8px 12px; border-radius:4px; width:70px; text-align:right; font-family:'JetBrains Mono',monospace; font-size:13px; margin-left:auto; }
+
+  .checkout-form .field{ margin-bottom:22px; }
+  .checkout-form label{ display:block; font-family:'JetBrains Mono',monospace; font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--dim); margin-bottom:10px; }
+  .checkout-form input{
+    width:100%; background:var(--glass); border:1px solid var(--glass-border); border-radius:12px; padding:14px 16px;
+    color:var(--white); font-family:'Inter',sans-serif; font-size:15px; outline:none; transition:border-color .3s;
+  }
+  .checkout-form input:focus{ border-color:var(--cyan); }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+
+  .trust-row{ display:flex; gap:14px; margin:30px 0; flex-wrap:wrap; }
+  .badge{ font-family:'JetBrains Mono',monospace; font-size:10px; text-transform:uppercase; color:var(--dim); padding:8px 14px; border:1px solid var(--glass-border); border-radius:100px; display:flex; align-items:center; gap:6px; }
+  .badge::before{ content:'✓'; color:var(--cyan); }
+
+  .pay-btn{
+    width:100%; padding:18px; border-radius:14px; border:none; cursor:pointer;
+    background:linear-gradient(100deg,var(--violet),var(--cyan)); color:#06060F;
+    font-family:'JetBrains Mono',monospace; font-size:13px; text-transform:uppercase; letter-spacing:0.1em; font-weight:600;
+    position:relative; overflow:hidden; transition:transform .3s var(--ease);
+  }
+  .pay-btn:hover{ transform:translateY(-2px); }
+  .pay-btn.success{ background:linear-gradient(100deg,#34D399,#22D3EE); }
+
+  /* ===== THANK YOU ===== */
+  #thankyou .wrap{ min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; }
+  .check-circle{ width:110px; height:110px; border-radius:50%; border:2px solid var(--cyan); display:flex; align-items:center; justify-content:center; margin-bottom:36px; box-shadow:0 0 60px rgba(34,211,238,0.4); }
+  .check-circle svg{ width:50px; height:50px; }
+  .check-circle path{ stroke:var(--cyan); stroke-width:3; fill:none; stroke-dasharray:60; stroke-dashoffset:60; }
+  #thankyou h2{ font-size:clamp(32px,5vw,54px); margin-bottom:16px; }
+  #thankyou p{ color:var(--dim); max-width:420px; line-height:1.7; font-size:15px; }
+
+  #confetti-canvas{ position:fixed; inset:0; z-index:500; pointer-events:none; }
+
+  footer{ border-top:1px solid var(--glass-border); padding:30px 48px; display:flex; justify-content:space-between; font-family:'JetBrains Mono',monospace; font-size:10.5px; color:var(--dim); text-transform:uppercase; letter-spacing:0.08em; position:relative; z-index:10; }
+
+  @media (max-width:900px){
+    nav{ padding:20px 22px; }
+    .nav-links{ display:none; }
+    .wrap{ padding:0 22px; }
+    .milestones{ grid-template-columns:1fr 1fr; }
+    .about-story{ grid-template-columns:1fr; gap:40px; }
+    .service-grid{ grid-template-columns:1fr; }
+    .plans{ grid-template-columns:1fr; }
+    .checkout-grid{ grid-template-columns:1fr; gap:50px; }
+    .stat-strip{ flex-wrap:wrap; gap:30px; }
+    footer{ flex-direction:column; gap:8px; padding:22px; }
+  }
+  @media (prefers-reduced-motion:reduce){ *{ animation-duration:0.01ms !important; transition-duration:0.01ms !important; } }
+</style>
+</head>
+<body>
+
+<div id="cursor-dot"></div>
+<div id="cursor-ring"></div>
+<canvas id="particles"></canvas>
+<canvas id="hero-canvas"></canvas>
+<canvas id="confetti-canvas"></canvas>
+
+<nav>
+  <div class="logo" onclick="goTo('home')"><span class="dot3d"></span>NEXUS</div>
+  <ul class="nav-links">
+    <li data-page="home" class="active" onclick="goTo('home')">Home</li>
+    <li data-page="about" onclick="goTo('about')">About</li>
+    <li data-page="services" onclick="goTo('services')">Services</li>
+    <li data-page="portfolio" onclick="goTo('portfolio')">Portfolio</li>
+    <li data-page="payment" onclick="goTo('payment')">Pricing</li>
+  </ul>
+  <div class="nav-cta" onclick="goTo('payment')">Start a Project</div>
+</nav>
+
+<!-- HOME -->
+<div class="page active" id="home">
+  <div class="wrap hero">
+    <div class="eyebrow"><span class="pill mono">Immersive Digital Experience Studio</span></div>
+    <h1>
+      <span class="line"><span>You don't browse</span></span>
+      <span class="line"><span class="grad-text">this. You enter it.</span></span>
+    </h1>
+    <p class="hero-sub">NEXUS builds next-generation web ecosystems — real-time 3D, physics-driven interaction, and multi-page experiences engineered to hook visitors in the first three seconds and convert them by the last scroll.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="goTo('portfolio')">See the work</button>
+      <span class="btn-ghost" onclick="goTo('payment')">View pricing →</span>
+    </div>
+    <div class="stat-strip">
+      <div><strong>2.1x</strong><span>Avg. Conversion Lift</span></div>
+      <div><strong>-38%</strong><span>Bounce Rate</span></div>
+      <div><strong>60fps</strong><span>WebGL Everywhere</span></div>
+    </div>
+  </div>
+
+  <section class="block wrap">
+    <div class="block-head">
+      <h2>Engineered to be felt, not just seen</h2>
+      <p>Every interaction — a cursor, a scroll, a hover — is treated as a chance to make the brand physical.</p>
+    </div>
+    <div class="service-grid">
+      <div class="service-card" onmousemove="cardGlow(event,this)">
+        <span class="num mono">01</span>
+        <h3>Real-Time 3D</h3>
+        <p>Custom Three.js and Spline objects that respond to cursor, scroll, and touch — never a static render.</p>
+      </div>
+      <div class="service-card" onmousemove="cardGlow(event,this)">
+        <span class="num mono">02</span>
+        <h3>Motion Systems</h3>
+        <p>GSAP-driven reveals, parallax, and page transitions tuned frame-by-frame for a "buttery" feel.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ABOUT -->
+<div class="page" id="about">
+  <div class="wrap">
+    <div class="eyebrow"><span class="pill mono">The Digital Story</span></div>
+    <h2 style="font-size:clamp(34px,5vw,56px); max-width:14ch; margin-top:20px;">Four years, one obsession: interfaces that feel alive.</h2>
+    <div class="milestones" style="margin-top:80px;">
+      <div class="m-card"><span class="yr mono">2021</span><h3>Studio Founded</h3><p>Started as a two-person WebGL shop building product configurators for e-commerce brands.</p></div>
+      <div class="m-card"><span class="yr mono">2022</span><h3>First 3D Flagship</h3><p>Shipped a fully interactive 3D storefront that lifted conversion by 41% for a footwear client.</p></div>
+      <div class="m-card"><span class="yr mono">2024</span><h3>Motion Framework</h3><p>Built an internal GSAP + Three.js toolkit now powering every NEXUS engagement.</p></div>
+      <div class="m-card"><span class="yr mono">2026</span><h3>18-Person Studio</h3><p>Three disciplines, one build system, engagements across commerce, fintech, and media.</p></div>
+    </div>
+
+    <div class="about-story">
+      <div>
+        <h2>We treat the browser like a stage, not a document.</h2>
+        <p>Most sites are read. Ours are entered. That distinction drives every decision — from how a hero object reacts to a mouse, to how a checkout flow rewards you with motion instead of a spinner.</p>
+        <p>We're a small team of WebGL engineers, motion designers, and conversion strategists who believe immersive doesn't have to mean slow, and beautiful doesn't have to mean impractical.</p>
+      </div>
+      <div class="team-grid">
+        <div class="team-card"><div class="ava"></div><h4>Mara Chen</h4><span>Creative Director</span></div>
+        <div class="team-card"><div class="ava"></div><h4>Theo Bryant</h4><span>WebGL Lead</span></div>
+        <div class="team-card"><div class="ava"></div><h4>Ines Ferrara</h4><span>Motion Designer</span></div>
+        <div class="team-card"><div class="ava"></div><h4>Jun Park</h4><span>Conversion Strategy</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICES -->
+<div class="page" id="services">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>Services</h2>
+      <p>Hover any card — nested detail and tiers reveal without a reload, the way the whole site behaves.</p>
+    </div>
+    <div class="service-grid">
+      <div class="service-card" onmousemove="cardGlow(event,this)">
+        <span class="num mono">01 / Web</span>
+        <h3>Web Design &amp; Development</h3>
+        <p>Multi-page ecosystems built on Next.js — fast, SEO-sound, and animated end to end.</p>
+        <div class="service-details">
+          <div class="service-tiers"><span>Landing</span><span>Multi-Page</span><span>Full Platform</span></div>
+        </div>
+      </div>
+      <div class="service-card" onmousemove="cardGlow(event,this)">
+        <span class="num mono">02 / WebGL</span>
+        <h3>3D &amp; WebGL Experiences</h3>
+        <p>Custom Three.js and Spline objects, configurators, and interactive galleries.</p>
+        <div class="service-details">
+          <div class="service-tiers"><span>Hero Object</span><span>Configurator</span><span>Full Scene</span></div>
+        </div>
+      </div>
+      <div class="service-card" onmousemove="cardGlow(event,this)">
+        <span class="num mono">03 / Brand</span>
+        <h3>Brand Systems</h3>
+        <p>Type, color, and motion tokens designed to travel across every surface, not just the homepage.</p>
+        <div class="service-details">
+          <div class="service-tiers"><span>Identity</span><span>Design System</span><span>Motion Kit</span></div>
+        </div>
+      </div>
+      <div class="service-card" onmousemove="cardGlow(event,this)">
+        <span class="num mono">04 / Commerce</span>
+        <h3>Checkout Engineering</h3>
+        <p>Glassmorphic, low-friction payment flows with live card previews and multi-currency support.</p>
+        <div class="service-details">
+          <div class="service-tiers"><span>Stripe</span><span>Multi-Currency</span><span>A/B Tested</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PORTFOLIO -->
+<div class="page" id="portfolio">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>Portfolio</h2>
+      <p>Spin the carousel or use the arrows — each project opens the same way it shipped: in motion.</p>
+    </div>
+    <div class="carousel-stage">
+      <div class="carousel-track" id="carouselTrack"></div>
+    </div>
+    <div class="carousel-controls">
+      <div class="c-btn" onclick="rotateCarousel(-1)">‹</div>
+      <div class="c-btn" onclick="rotateCarousel(1)">›</div>
+    </div>
+  </div>
+</div>
+
+<!-- PAYMENT / PRICING (DEMO) -->
+<div class="page" id="payment">
+  <div class="wrap">
+    <div class="block-head">
+      <h2>Pricing</h2>
+      <p>Pick a tier, preview the checkout — this is a front-end demo only, no card data leaves your browser.</p>
+    </div>
+    <div class="demo-note"><strong>Demo checkout:</strong> nothing here is transmitted, stored, or charged. It's a UI preview of the payment experience, not a live payment processor.</div>
+
+    <div class="plans">
+      <div class="plan" data-price-usd="1200" onclick="selectPlan(this)">
+        <span class="mono">Starter</span>
+        <div class="price">$1,200<span>/project</span></div>
+        <ul><li>Single 3D hero page</li><li>Basic motion pass</li><li>2 week delivery</li></ul>
+      </div>
+      <div class="plan selected" data-price-usd="4800" onclick="selectPlan(this)">
+        <span class="mono">Growth</span>
+        <div class="price">$4,800<span>/project</span></div>
+        <ul><li>Full 5-page ecosystem</li><li>Custom Three.js hero</li><li>GSAP scroll system</li><li>4 week delivery</li></ul>
+      </div>
+      <div class="plan" data-price-usd="12000" onclick="selectPlan(this)">
+        <span class="mono">Enterprise</span>
+        <div class="price">$12,000<span>/project</span></div>
+        <ul><li>Full ecosystem + checkout</li><li>WebGL product configurator</li><li>Dedicated build team</li></ul>
+      </div>
+    </div>
+
+    <div class="currency-toggle">
+      <span class="active" onclick="setCurrency('USD',this)">USD</span>
+      <span onclick="setCurrency('EUR',this)">EUR</span>
+      <span onclick="setCurrency('INR',this)">INR</span>
+    </div>
+
+    <div class="checkout-grid">
+      <div>
+        <div class="card-3d-wrap">
+          <div class="card-3d" id="card3d">
+            <div class="card-face front">
+              <div class="row"><div class="chip"></div><div class="brand">NEXUS PAY</div></div>
+              <div class="num" id="cardNumDisplay">•••• •••• •••• ••••</div>
+              <div class="row">
+                <div><div class="lbl">Card Holder</div><div class="val" id="cardNameDisplay">Your Name</div></div>
+                <div><div class="lbl">Expires</div><div class="val" id="cardExpDisplay">MM/YY</div></div>
+              </div>
+            </div>
+            <div class="card-face back">
+              <div class="stripe"></div>
+              <div class="cvc-box" id="cardCvcDisplay">•••</div>
+            </div>
+          </div>
+        </div>
+        <div class="trust-row">
+          <span class="badge">256-Bit SSL</span>
+          <span class="badge">Stripe Verified</span>
+          <span class="badge">PCI Compliant</span>
+        </div>
+      </div>
+
+      <div class="checkout-form">
+        <div class="field">
+          <label>Card Number</label>
+          <input type="text" maxlength="19" placeholder="4242 4242 4242 4242" oninput="updateCardNumber(this.value)">
+        </div>
+        <div class="field">
+          <label>Card Holder Name</label>
+          <input type="text" placeholder="Jordan Smith" oninput="updateCardName(this.value)">
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label>Expiry</label>
+            <input type="text" maxlength="5" placeholder="MM/YY" oninput="updateCardExp(this.value)">
+          </div>
+          <div class="field">
+            <label>CVC</label>
+            <input type="text" maxlength="3" placeholder="123" oninput="updateCardCvc(this.value)" onfocus="flipCard(true)" onblur="flipCard(false)">
+          </div>
+        </div>
+        <button class="pay-btn" id="payBtn" onclick="handlePay()">Pay Now — <span id="payAmount">$4,800</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THANK YOU -->
+<div class="page" id="thankyou">
+  <div class="wrap">
+    <div class="check-circle"><svg viewBox="0 0 52 52"><path id="checkPath" d="M14 27l8 8 16-16"/></svg></div>
+    <h2>You're in the ecosystem.</h2>
+    <p>Your project brief has been received. A NEXUS strategist will reach out within one business day to kick off discovery.</p>
+    <div style="margin-top:36px;"><span class="btn-ghost" onclick="goTo('home')">← Back to home</span></div>
+  </div>
+</div>
+
+<footer>
+  <span>© 2026 Nexus Digital Experience Studio</span>
+  <span>Built With Three.js · GSAP · Next.js</span>
+</footer>
+
+<script>
+/* ============ CUSTOM CURSOR ============ */
+const cDot = document.getElementById('cursor-dot');
+const cRing = document.getElementById('cursor-ring');
+let mx=innerWidth/2,my=innerHeight/2,rx=mx,ry=my;
+window.addEventListener('mousemove', e=>{ mx=e.clientX; my=e.clientY; cDot.style.left=mx+'px'; cDot.style.top=my+'px'; });
+(function loop(){ rx += (mx-rx)*0.18; ry += (my-ry)*0.18; cRing.style.left=rx+'px'; cRing.style.top=ry+'px'; requestAnimationFrame(loop); })();
+document.querySelectorAll('a,button,li,.plan,.service-card,.carousel-item,.c-btn,.logo,.nav-cta,input').forEach(el=>{
+  el.addEventListener('mouseenter', ()=>cRing.classList.add('hover'));
+  el.addEventListener('mouseleave', ()=>cRing.classList.remove('hover'));
+});
+
+/* ============ PARTICLE NETWORK ============ */
+const pCanvas = document.getElementById('particles');
+const pCtx = pCanvas.getContext('2d');
+function sizeCanvas(c){ c.width = innerWidth; c.height = innerHeight; }
+sizeCanvas(pCanvas);
+let particles = Array.from({length:70}, ()=>({
+  x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+  vx:(Math.random()-0.5)*0.3, vy:(Math.random()-0.5)*0.3
+}));
+function drawParticles(){
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles.forEach(p=>{
+    p.x+=p.vx; p.y+=p.vy;
+    if(p.x<0||p.x>pCanvas.width) p.vx*=-1;
+    if(p.y<0||p.y>pCanvas.height) p.vy*=-1;
+  });
+  for(let i=0;i<particles.length;i++){
+    for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<120){
+        pCtx.strokeStyle = `rgba(139,92,246,${0.12*(1-dist/120)})`;
+        pCtx.beginPath(); pCtx.moveTo(particles[i].x,particles[i].y); pCtx.lineTo(particles[j].x,particles[j].y); pCtx.stroke();
+      }
+    }
+    pCtx.fillStyle='rgba(34,211,238,0.5)';
+    pCtx.beginPath(); pCtx.arc(particles[i].x,particles[i].y,1.6,0,Math.PI*2); pCtx.fill();
+  }
+  requestAnimationFrame(drawParticles);
+}
+drawParticles();
+
+/* ============ THREE.JS HERO OBJECT ============ */
+const heroCanvas = document.getElementById('hero-canvas');
+const renderer = new THREE.WebGLRenderer({canvas:heroCanvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0,0,9);
+const group = new THREE.Group(); scene.add(group);
+const geo = new THREE.IcosahedronGeometry(2.4,1);
+const mat = new THREE.MeshBasicMaterial({color:0x8B5CF6, wireframe:true, transparent:true, opacity:0.6});
+const mesh = new THREE.Mesh(geo, mat);
+const geo2 = new THREE.IcosahedronGeometry(1.5,1);
+const mat2 = new THREE.MeshBasicMaterial({color:0x22D3EE, wireframe:true, transparent:true, opacity:0.35});
+const mesh2 = new THREE.Mesh(geo2, mat2);
+group.add(mesh, mesh2);
+function positionRig(){
+  if(innerWidth<900){ group.position.set(0,-2,0); camera.position.set(0,0,10.5); }
+  else{ group.position.set(3.2,0,0); camera.position.set(0,0,9); }
+}
+positionRig();
+let tRotX=0,tRotY=0;
+window.addEventListener('mousemove', e=>{
+  tRotY=(e.clientX/innerWidth-0.5)*0.7;
+  tRotX=(e.clientY/innerHeight-0.5)*0.5;
+});
+function animateHero(){
+  requestAnimationFrame(animateHero);
+  mesh.rotation.y+=0.0025; mesh.rotation.x+=0.001;
+  mesh2.rotation.y-=0.0018; mesh2.rotation.x-=0.0013;
+  group.rotation.y += (tRotY-group.rotation.y)*0.04;
+  group.rotation.x += (tRotX-group.rotation.x)*0.04;
+  renderer.render(scene,camera);
+}
+animateHero();
+window.addEventListener('resize', ()=>{
+  sizeCanvas(pCanvas);
+  camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+  positionRig();
+});
+
+/* ============ HERO TEXT REVEAL (GSAP) ============ */
+gsap.registerPlugin(ScrollTrigger);
+function playHeroIntro(){
+  gsap.fromTo('.hero h1 .line span', {yPercent:120}, {yPercent:0, duration:1, ease:'power4.out', stagger:0.12});
+  gsap.to('.hero-sub', {opacity:1, duration:1, delay:0.5, ease:'power2.out'});
+  gsap.to('.hero-actions', {opacity:1, duration:1, delay:0.7, ease:'power2.out'});
+  gsap.to('.stat-strip', {opacity:1, duration:1, delay:0.9, ease:'power2.out'});
+}
+playHeroIntro();
+
+/* Scroll-triggered milestone cards */
+function setupScrollReveals(){
+  gsap.utils.toArray('.m-card').forEach((card,i)=>{
+    ScrollTrigger.create({
+      trigger:card, start:'top 85%',
+      onEnter:()=> gsap.to(card, {opacity:1, y:0, rotateX:0, duration:0.9, delay:i*0.08, ease:'power3.out'})
+    });
+  });
+}
+setupScrollReveals();
+
+function cardGlow(e, el){
+  const r = el.getBoundingClientRect();
+  el.style.setProperty('--mx', (e.clientX-r.left)+'px');
+  el.style.setProperty('--my', (e.clientY-r.top)+'px');
+}
+
+/* ============ CAROUSEL ============ */
+const projects = [
+  {name:'Lumen Retail', sys:'3D Commerce Engine', c1:'#8B5CF6', c2:'#22D3EE'},
+  {name:'Vantage Finance', sys:'Live Dashboard System', c1:'#22D3EE', c2:'#F472B6'},
+  {name:'Echo Audio', sys:'Product Configurator', c1:'#F472B6', c2:'#8B5CF6'},
+  {name:'Solace Wellness', sys:'Booking Experience', c1:'#34D399', c2:'#22D3EE'},
+  {name:'Orbit Media', sys:'Interactive Story Engine', c1:'#8B5CF6', c2:'#F472B6'}
+];
+const track = document.getElementById('carouselTrack');
+const radius = 480;
+let carouselAngle = 0;
+projects.forEach((p,i)=>{
+  const el = document.createElement('div');
+  el.className='carousel-item';
+  const theta = (360/projects.length)*i;
+  el.style.transform = `rotateY(${theta}deg) translateZ(${radius}px)`;
+  el.innerHTML = `<div class="glow" style="background:linear-gradient(160deg, ${p.c1}55, transparent)"></div><span class="sys">${p.sys}</span><h3>${p.name}</h3>`;
+  el.onclick = ()=>{ carouselAngle = -theta; updateCarousel(); };
+  track.appendChild(el);
+});
+function updateCarousel(){
+  track.style.transform = `translateZ(-${radius}px) rotateY(${carouselAngle}deg)`;
+  document.querySelectorAll('.carousel-item').forEach((el,i)=>{
+    const theta=(360/projects.length)*i;
+    const total = ((theta+carouselAngle)%360+360)%360;
+    el.classList.toggle('center', total<20 || total>340);
+  });
+}
+function rotateCarousel(dir){ carouselAngle += dir*(360/projects.length); updateCarousel(); }
+updateCarousel();
+
+/* ============ PRICING / CARD DEMO ============ */
+const rates = {USD:1, EUR:0.92, INR:83.1};
+const symbols = {USD:'$', EUR:'€', INR:'₹'};
+let currentCurrency='USD';
+let currentPriceUSD = 4800;
+function selectPlan(el){
+  document.querySelectorAll('.plan').forEach(p=>p.classList.remove('selected'));
+  el.classList.add('selected');
+  currentPriceUSD = parseInt(el.dataset.priceUsd,10);
+  refreshPrice();
+}
+function setCurrency(cur, el){
+  currentCurrency=cur;
+  document.querySelectorAll('.currency-toggle span').forEach(s=>s.classList.remove('active'));
+  el.classList.add('active');
+  refreshPrice();
+}
+function refreshPrice(){
+  const val = Math.round(currentPriceUSD*rates[currentCurrency]).toLocaleString();
+  document.getElementById('payAmount').textContent = symbols[currentCurrency]+val;
+}
+refreshPrice();
+
+function updateCardNumber(v){
+  const digits = v.replace(/\D/g,'').padEnd(16,'•').slice(0,16);
+  const grouped = digits.match(/.{1,4}/g).join(' ');
+  document.getElementById('cardNumDisplay').textContent = grouped;
+}
+function updateCardName(v){ document.getElementById('cardNameDisplay').textContent = v.trim()? v : 'Your Name'; }
+function updateCardExp(v){ document.getElementById('cardExpDisplay').textContent = v.trim()? v : 'MM/YY'; }
+function updateCardCvc(v){ document.getElementById('cardCvcDisplay').textContent = v.padEnd(3,'•'); }
+function flipCard(state){ document.getElementById('card3d').classList.toggle('flipped', state); }
+
+function handlePay(){
+  const btn = document.getElementById('payBtn');
+  btn.textContent = 'Processing…';
+  setTimeout(()=>{
+    btn.classList.add('success');
+    btn.textContent = '✓ Payment Confirmed';
+    burstConfetti();
+    setTimeout(()=>{ goTo('thankyou'); animateCheck(); }, 900);
+  }, 900);
+}
+
+/* ============ CONFETTI ============ */
+const confCanvas = document.getElementById('confetti-canvas');
+const confCtx = confCanvas.getContext('2d');
+sizeCanvas(confCanvas);
+window.addEventListener('resize', ()=>sizeCanvas(confCanvas));
+function burstConfetti(){
+  const colors=['#8B5CF6','#22D3EE','#F472B6','#34D399'];
+  let bits = Array.from({length:120}, ()=>({
+    x:confCanvas.width/2, y:confCanvas.height/2,
+    vx:(Math.random()-0.5)*14, vy:(Math.random()-1.2)*14,
+    size:Math.random()*6+3, color:colors[Math.floor(Math.random()*colors.length)],
+    life:100
+  }));
+  function frame(){
+    confCtx.clearRect(0,0,confCanvas.width,confCanvas.height);
+    bits.forEach(b=>{
+      b.x+=b.vx; b.y+=b.vy; b.vy+=0.35; b.life--;
+      confCtx.fillStyle=b.color;
+      confCtx.fillRect(b.x,b.y,b.size,b.size);
+    });
+    bits = bits.filter(b=>b.life>0);
+    if(bits.length>0) requestAnimationFrame(frame);
+    else confCtx.clearRect(0,0,confCanvas.width,confCanvas.height);
+  }
+  frame();
+}
+function animateCheck(){
+  gsap.fromTo('#checkPath', {strokeDashoffset:60}, {strokeDashoffset:0, duration:0.8, ease:'power2.out', delay:0.2});
+}
+
+/* ============ NAV / PAGE ROUTING ============ */
+function goTo(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-links li').forEach(l=>l.classList.remove('active'));
+  document.getElementById(page).classList.add('active');
+  const navItem = document.querySelector('.nav-links li[data-page="'+page+'"]');
+  if(navItem) navItem.classList.add('active');
+  window.scrollTo({top:0, behavior:'instant'});
+  if(page==='home'){ playHeroIntro(); }
+  if(page==='about'){ setTimeout(()=>ScrollTrigger.refresh(),50); }
+}
+</script>
+
+</body>
+</html>
