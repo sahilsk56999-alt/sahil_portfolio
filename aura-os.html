@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AURA OS — Spatial Web Workstation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --glass: rgba(255,255,255,0.14);
+  --glass-strong: rgba(255,255,255,0.22);
+  --line: rgba(255,255,255,0.22);
+  --ink:#1B1C22;
+  --accent:#7C6CF5;
+  --accent-2:#3FD7C4;
+  --menubar-h:30px;
+  --dock-h:74px;
+}
+*{ margin:0; padding:0; box-sizing:border-box; user-select:none; }
+body{
+  font-family:'Inter',sans-serif;
+  color:#fff;
+  height:100vh; width:100vw; overflow:hidden;
+  position:relative;
+}
+::selection{ background:var(--accent); color:#fff; }
+
+/* ---------- Wallpaper ---------- */
+#wallpaper{ position:fixed; inset:0; z-index:0; }
+#wallpaper canvas{ width:100%; height:100%; display:block; }
+.wallpaper-overlay{ position:fixed; inset:0; z-index:1; background:radial-gradient(circle at 30% 20%, rgba(124,108,245,0.25), transparent 55%), radial-gradient(circle at 80% 80%, rgba(63,215,196,0.2), transparent 55%); pointer-events:none; }
+
+/* ---------- Menu bar ---------- */
+#menubar{
+  position:fixed; top:0; left:0; right:0; height:var(--menubar-h); z-index:5000;
+  background:rgba(20,20,28,0.45); backdrop-filter:blur(22px) saturate(160%); -webkit-backdrop-filter:blur(22px) saturate(160%);
+  border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 16px; font-size:12.5px; font-weight:500;
+}
+.mb-left{ display:flex; align-items:center; gap:20px; }
+.mb-left .brand{ font-weight:700; display:flex; align-items:center; gap:6px; }
+.mb-left .brand .dot{ width:9px; height:9px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent-2)); }
+.mb-left span{ opacity:0.85; cursor:default; }
+.mb-left span.active-app{ font-weight:600; opacity:1; }
+.mb-right{ display:flex; align-items:center; gap:14px; opacity:0.9; font-family:'JetBrains Mono',monospace; font-size:11.5px; }
+
+/* ---------- Desktop icons ---------- */
+#desktop-icons{ position:fixed; top:calc(var(--menubar-h) + 26px); right:26px; z-index:10; display:flex; flex-direction:column; gap:22px; }
+.dicon{ width:78px; text-align:center; cursor:pointer; perspective:400px; }
+.dicon .tile{ width:56px; height:56px; margin:0 auto 6px; border-radius:14px; background:var(--glass); border:1px solid var(--line); backdrop-filter:blur(10px); display:flex; align-items:center; justify-content:center; font-size:26px; transition:transform .12s linear, box-shadow .2s; transform-style:preserve-3d; }
+.dicon:hover .tile{ box-shadow:0 14px 30px rgba(0,0,0,0.35); }
+.dicon span.label{ font-size:11px; text-shadow:0 1px 3px rgba(0,0,0,0.6); }
+
+/* ---------- Windows ---------- */
+.win{
+  position:fixed; min-width:320px; min-height:220px;
+  background:rgba(28,28,36,0.72); backdrop-filter:blur(26px) saturate(160%); -webkit-backdrop-filter:blur(26px) saturate(160%);
+  border:1px solid var(--line); border-radius:14px; overflow:hidden;
+  box-shadow:0 30px 70px rgba(0,0,0,0.45);
+  display:flex; flex-direction:column;
+  transition:opacity .18s ease, transform .22s cubic-bezier(.2,.9,.3,1.2);
+}
+.win.minimized{ opacity:0; transform:scale(0.1) translateY(400px); pointer-events:none; }
+.win.opening{ animation:winOpen .28s cubic-bezier(.2,.9,.3,1.3); }
+@keyframes winOpen{ from{ opacity:0; transform:scale(0.85); } to{ opacity:1; transform:scale(1); } }
+.win-titlebar{
+  height:38px; display:flex; align-items:center; padding:0 14px; gap:10px;
+  background:rgba(255,255,255,0.04); border-bottom:1px solid var(--line);
+  cursor:move; flex-shrink:0;
+}
+.traffic{ display:flex; gap:8px; }
+.traffic span{ width:12px; height:12px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:8px; color:transparent; }
+.traffic .close{ background:#FF5F57; }
+.traffic .min{ background:#FEBC2E; }
+.traffic .max{ background:#28C840; }
+.traffic span:hover{ color:rgba(0,0,0,0.5); }
+.win-title{ flex:1; text-align:center; font-size:12.5px; font-weight:600; opacity:0.85; margin-right:60px; }
+.win-body{ flex:1; overflow:auto; position:relative; }
+.resize-handle{ position:absolute; right:2px; bottom:2px; width:16px; height:16px; cursor:nwse-resize; opacity:0.4; }
+.resize-handle::before{ content:''; position:absolute; right:3px; bottom:3px; width:8px; height:8px; border-right:2px solid #fff; border-bottom:2px solid #fff; }
+
+/* ---------- Dock ---------- */
+#dock-wrap{ position:fixed; bottom:10px; left:0; right:0; z-index:6000; display:flex; justify-content:center; pointer-events:none; }
+#dock{
+  pointer-events:all; display:flex; align-items:flex-end; gap:12px; padding:10px 16px 8px;
+  background:rgba(255,255,255,0.12); backdrop-filter:blur(24px) saturate(180%); -webkit-backdrop-filter:blur(24px) saturate(180%);
+  border:1px solid var(--line); border-radius:20px;
+}
+.dock-item{ width:52px; height:52px; border-radius:13px; display:flex; align-items:center; justify-content:center; font-size:26px; cursor:pointer; position:relative; transition:transform .12s cubic-bezier(.2,.9,.3,1); transform-origin:bottom center; background:var(--glass); border:1px solid transparent; }
+.dock-item .indicator{ position:absolute; bottom:-7px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:#fff; opacity:0; }
+.dock-item.running .indicator{ opacity:0.9; }
+.dock-sep{ width:1px; height:40px; background:var(--line); margin:0 4px; align-self:center; }
+.dock-tooltip{ position:absolute; bottom:64px; left:50%; transform:translateX(-50%); background:rgba(20,20,28,0.9); padding:5px 10px; border-radius:6px; font-size:11px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .15s; }
+.dock-item:hover .dock-tooltip{ opacity:1; }
+
+/* ---------- App content shared ---------- */
+.app-pad{ padding:20px; }
+.finder-layout{ display:flex; height:100%; }
+.finder-sidebar{ width:150px; background:rgba(255,255,255,0.03); border-right:1px solid var(--line); padding:14px 10px; font-size:12px; flex-shrink:0; }
+.finder-sidebar h5{ font-size:10px; text-transform:uppercase; opacity:0.5; margin:10px 6px 6px; letter-spacing:0.06em; }
+.finder-sidebar div{ padding:7px 8px; border-radius:6px; cursor:pointer; opacity:0.85; }
+.finder-sidebar div:hover{ background:var(--glass); }
+.finder-main{ flex:1; padding:20px; overflow:auto; }
+.breadcrumb{ font-size:11.5px; opacity:0.6; margin-bottom:16px; }
+.folder-grid{ display:grid; grid-template-columns:repeat(auto-fill, 84px); gap:18px; }
+.folder-item{ text-align:center; cursor:pointer; perspective:300px; }
+.folder-item .ficon{ width:60px; height:50px; margin:0 auto 6px; background:linear-gradient(160deg,#5B9DF5,#3F7BDB); border-radius:8px 8px 8px 8px; position:relative; transition:transform .2s; }
+.folder-item .ficon::before{ content:''; position:absolute; top:-7px; left:0; width:28px; height:8px; background:#3F7BDB; border-radius:4px 4px 0 0; }
+.folder-item:hover .ficon{ transform:rotateX(10deg) translateY(-3px); }
+.folder-item span{ font-size:11px; }
+
+.browser-bar{ display:flex; align-items:center; gap:10px; padding:10px 14px; background:rgba(255,255,255,0.04); border-bottom:1px solid var(--line); }
+.browser-nav{ display:flex; gap:6px; opacity:0.6; font-size:13px; }
+.browser-url{ flex:1; background:rgba(0,0,0,0.25); border-radius:8px; padding:7px 14px; font-size:12px; opacity:0.85; }
+.browser-content{ padding:40px; }
+.browser-content h1{ font-size:32px; margin-bottom:12px; }
+.browser-content p{ opacity:0.7; font-size:14px; line-height:1.7; max-width:520px; margin-bottom:10px; }
+
+.viewer-canvas{ width:100%; height:280px; }
+
+/* payment app reuse */
+.pay-note{ background:rgba(255,190,80,0.12); border:1px solid rgba(255,190,80,0.35); font-size:11.5px; padding:10px 14px; border-radius:8px; margin-bottom:18px; }
+.card3d-wrap{ perspective:900px; margin-bottom:20px; }
+.card3d{ width:100%; max-width:340px; aspect-ratio:1.586/1; border-radius:16px; background:linear-gradient(135deg,#2b2c46,#15161f); border:1px solid var(--line); padding:20px; display:flex; flex-direction:column; justify-content:space-between; }
+.card3d .chip{ width:34px; height:26px; border-radius:5px; background:linear-gradient(135deg,var(--accent-2),var(--accent)); }
+.card3d .num{ font-family:'JetBrains Mono',monospace; font-size:17px; letter-spacing:0.12em; }
+.card3d .row{ display:flex; justify-content:space-between; font-size:11px; }
+.pay-field{ margin-bottom:12px; }
+.pay-field label{ display:block; font-size:10.5px; opacity:0.6; margin-bottom:5px; text-transform:uppercase; letter-spacing:0.06em; }
+.pay-field input{ width:100%; background:rgba(255,255,255,0.06); border:1px solid var(--line); border-radius:8px; padding:9px 11px; color:#fff; font-size:13px; outline:none; }
+.pay-btn{ width:100%; padding:12px; border-radius:8px; border:none; background:linear-gradient(100deg,var(--accent),var(--accent-2)); color:#0C0C12; font-weight:700; font-size:12.5px; cursor:pointer; margin-top:6px; }
+
+@media (max-width:820px){
+  #desktop-icons{ right:14px; gap:16px; }
+  .dicon{ width:64px; }
+  .win{ min-width:88vw !important; left:6vw !important; }
+}
+</style>
+</head>
+<body>
+
+<div id="wallpaper"><canvas id="wpCanvas"></canvas></div>
+<div class="wallpaper-overlay"></div>
+
+<div id="menubar">
+  <div class="mb-left">
+    <div class="brand"><span class="dot"></span>AURA</div>
+    <span class="active-app" id="activeAppName">Finder</span>
+    <span>File</span><span>Edit</span><span>View</span><span>Window</span>
+  </div>
+  <div class="mb-right">
+    <span id="wifiIcon">📶</span>
+    <span id="batteryIcon">🔋 87%</span>
+    <span id="clock">--:--</span>
+  </div>
+</div>
+
+<div id="desktop-icons">
+  <div class="dicon" onclick="openApp('finder')" onmousemove="tiltIcon(event,this)" onmouseleave="untilt(this)"><div class="tile">🗂️</div><span class="label">Finder</span></div>
+  <div class="dicon" onclick="openApp('browser')" onmousemove="tiltIcon(event,this)" onmouseleave="untilt(this)"><div class="tile">🧭</div><span class="label">Browser</span></div>
+  <div class="dicon" onclick="openApp('portfolio')" onmousemove="tiltIcon(event,this)" onmouseleave="untilt(this)"><div class="tile">🧊</div><span class="label">Portfolio</span></div>
+  <div class="dicon" onclick="openApp('payment')" onmousemove="tiltIcon(event,this)" onmouseleave="untilt(this)"><div class="tile">💳</div><span class="label">Pay Hub</span></div>
+</div>
+
+<div id="windows-layer"></div>
+
+<div id="dock-wrap">
+  <div id="dock">
+    <div class="dock-item" data-app="finder" onclick="openApp('finder')"><span>🗂️</span><div class="indicator"></div><div class="dock-tooltip">Finder</div></div>
+    <div class="dock-item" data-app="browser" onclick="openApp('browser')"><span>🧭</span><div class="indicator"></div><div class="dock-tooltip">Browser</div></div>
+    <div class="dock-item" data-app="portfolio" onclick="openApp('portfolio')"><span>🧊</span><div class="indicator"></div><div class="dock-tooltip">3D Portfolio</div></div>
+    <div class="dock-sep"></div>
+    <div class="dock-item" data-app="payment" onclick="openApp('payment')"><span>💳</span><div class="indicator"></div><div class="dock-tooltip">Secure Pay Hub</div></div>
+  </div>
+</div>
+
+<script>
+/* ================= WALLPAPER (animated gradient, three.js) ================= */
+const wpCanvas = document.getElementById('wpCanvas');
+const wpRenderer = new THREE.WebGLRenderer({canvas:wpCanvas, antialias:true});
+wpRenderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const wpScene = new THREE.Scene();
+const wpCamera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 100);
+wpCamera.position.z = 8;
+function sizeWp(){ wpRenderer.setSize(innerWidth, innerHeight); wpCamera.aspect = innerWidth/innerHeight; wpCamera.updateProjectionMatrix(); }
+sizeWp();
+window.addEventListener('resize', sizeWp);
+const blobGeo = new THREE.IcosahedronGeometry(3.4, 3);
+const blobMat = new THREE.MeshStandardMaterial({color:0x7C6CF5, roughness:0.7, metalness:0.1, flatShading:true});
+const blob = new THREE.Mesh(blobGeo, blobMat);
+blob.position.set(-2.5,1,-3);
+wpScene.add(blob);
+const blob2Geo = new THREE.IcosahedronGeometry(2.6, 3);
+const blob2Mat = new THREE.MeshStandardMaterial({color:0x3FD7C4, roughness:0.7, metalness:0.1, flatShading:true});
+const blob2 = new THREE.Mesh(blob2Geo, blob2Mat);
+blob2.position.set(3,-1.5,-4);
+wpScene.add(blob2);
+wpScene.add(new THREE.HemisphereLight(0xffffff, 0x11111a, 1.3));
+const pl = new THREE.PointLight(0xffffff, 0.6); pl.position.set(4,4,6); wpScene.add(pl);
+function animateWp(){
+  requestAnimationFrame(animateWp);
+  blob.rotation.y += 0.0015; blob.rotation.x += 0.0007;
+  blob2.rotation.y -= 0.0012; blob2.rotation.x -= 0.0009;
+  wpRenderer.render(wpScene, wpCamera);
+}
+animateWp();
+
+/* ================= MENU BAR CLOCK ================= */
+function tick(){
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'}) + '  ' + d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+}
+tick(); setInterval(tick, 1000);
+
+/* ================= DESKTOP ICON TILT ================= */
+function tiltIcon(e, el){
+  const tile = el.querySelector('.tile');
+  const r = el.getBoundingClientRect();
+  const rx = ((e.clientY - r.top)/r.height - 0.5) * -22;
+  const ry = ((e.clientX - r.left)/r.width - 0.5) * 22;
+  tile.style.transform = `rotateX(${rx}deg) rotateY(${ry}deg) scale(1.06)`;
+}
+function untilt(el){ el.querySelector('.tile').style.transform = 'rotateX(0) rotateY(0) scale(1)'; }
+
+/* ================= DOCK MAGNIFICATION ================= */
+const dock = document.getElementById('dock');
+dock.addEventListener('mousemove', e=>{
+  const items = dock.querySelectorAll('.dock-item');
+  items.forEach(item=>{
+    const r = item.getBoundingClientRect();
+    const cx = r.left + r.width/2;
+    const dist = Math.abs(e.clientX - cx);
+    const scale = Math.max(1, 1.7 - dist/110);
+    item.style.transform = `scale(${scale}) translateY(${-(scale-1)*14}px)`;
+  });
+});
+dock.addEventListener('mouseleave', ()=>{
+  dock.querySelectorAll('.dock-item').forEach(item=> item.style.transform = 'scale(1)');
+});
+
+/* ================= WINDOW MANAGER ================= */
+let zTop = 100;
+let openWindows = {}; // appId -> {el, minimized}
+const layer = document.getElementById('windows-layer');
+
+const appMeta = {
+  finder:   {title:'Finder', w:640, h:420},
+  browser:  {title:'Browser', w:700, h:460},
+  portfolio:{title:'3D Portfolio', w:600, h:440},
+  payment:  {title:'Secure Pay Hub', w:560, h:520}
+};
+
+function openApp(appId){
+  if(openWindows[appId]){
+    // already open — restore/focus
+    const w = openWindows[appId];
+    w.el.classList.remove('minimized');
+    focusWindow(appId);
+    return;
+  }
+  const meta = appMeta[appId];
+  const el = document.createElement('div');
+  el.className = 'win opening';
+  el.style.width = meta.w+'px';
+  el.style.height = meta.h+'px';
+  el.style.left = (80 + Object.keys(openWindows).length*36)+'px';
+  el.style.top = (60 + Object.keys(openWindows).length*30)+'px';
+  el.style.zIndex = ++zTop;
+  el.innerHTML = `
+    <div class="win-titlebar">
+      <div class="traffic">
+        <span class="close" onclick="closeApp('${appId}')"></span>
+        <span class="min" onclick="minimizeApp('${appId}')"></span>
+        <span class="max" onclick="toggleMaximize('${appId}')"></span>
+      </div>
+      <div class="win-title">${meta.title}</div>
+    </div>
+    <div class="win-body">${appContent(appId)}</div>
+    <div class="resize-handle"></div>
+  `;
+  layer.appendChild(el);
+  openWindows[appId] = {el, minimized:false, maxed:false, prevRect:null};
+  makeDraggable(el, appId);
+  makeResizable(el);
+  el.addEventListener('mousedown', ()=>focusWindow(appId));
+  focusWindow(appId);
+  updateDockIndicator(appId, true);
+  if(appId==='portfolio') setTimeout(()=>initPortfolioViewer(), 40);
+}
+
+function closeApp(appId){
+  const w = openWindows[appId];
+  if(!w) return;
+  w.el.remove();
+  delete openWindows[appId];
+  updateDockIndicator(appId, false);
+}
+function minimizeApp(appId){
+  const w = openWindows[appId];
+  if(!w) return;
+  w.el.classList.add('minimized');
+}
+function toggleMaximize(appId){
+  const w = openWindows[appId];
+  if(!w) return;
+  if(!w.maxed){
+    w.prevRect = {left:w.el.style.left, top:w.el.style.top, width:w.el.style.width, height:w.el.style.height};
+    w.el.style.left='10px'; w.el.style.top='calc(var(--menubar-h) + 8px)';
+    w.el.style.width='calc(100vw - 20px)'; w.el.style.height='calc(100vh - var(--menubar-h) - var(--dock-h) - 10px)';
+    w.maxed = true;
+  } else {
+    Object.assign(w.el.style, w.prevRect);
+    w.maxed = false;
+  }
+}
+function focusWindow(appId){
+  const w = openWindows[appId];
+  if(!w) return;
+  w.el.style.zIndex = ++zTop;
+  document.getElementById('activeAppName').textContent = appMeta[appId].title;
+}
+function updateDockIndicator(appId, running){
+  const item = document.querySelector('.dock-item[data-app="'+appId+'"]');
+  if(item) item.classList.toggle('running', running);
+}
+
+function makeDraggable(el, appId){
+  const bar = el.querySelector('.win-titlebar');
+  let dragging=false, ox=0, oy=0;
+  bar.addEventListener('mousedown', e=>{
+    if(e.target.closest('.traffic')) return;
+    dragging=true;
+    const r = el.getBoundingClientRect();
+    ox = e.clientX - r.left; oy = e.clientY - r.top;
+    focusWindow(appId);
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    el.style.left = Math.max(0, e.clientX-ox)+'px';
+    el.style.top = Math.max(30, e.clientY-oy)+'px';
+  });
+  window.addEventListener('mouseup', ()=>dragging=false);
+}
+function makeResizable(el){
+  const handle = el.querySelector('.resize-handle');
+  let resizing=false, sw=0, sh=0, sx=0, sy=0;
+  handle.addEventListener('mousedown', e=>{
+    resizing=true; sw=el.offsetWidth; sh=el.offsetHeight; sx=e.clientX; sy=e.clientY;
+    e.stopPropagation();
+  });
+  window.addEventListener('mousemove', e=>{
+    if(!resizing) return;
+    el.style.width = Math.max(320, sw + (e.clientX-sx))+'px';
+    el.style.height = Math.max(220, sh + (e.clientY-sy))+'px';
+  });
+  window.addEventListener('mouseup', ()=>resizing=false);
+}
+
+/* ================= APP CONTENT ================= */
+function appContent(appId){
+  if(appId==='finder') return `
+    <div class="finder-layout">
+      <div class="finder-sidebar">
+        <h5>Favorites</h5>
+        <div>🏠 Home</div><div>🖥️ Desktop</div><div>📄 Documents</div><div>⬇️ Downloads</div>
+        <h5>Locations</h5>
+        <div>☁️ Aura Cloud</div>
+      </div>
+      <div class="finder-main">
+        <div class="breadcrumb">Home / Projects</div>
+        <div class="folder-grid">
+          ${['Client Work','3D Assets','Brand Kits','Invoices','Portfolio','Archive','Contracts','Team Files'].map(n=>`<div class="folder-item"><div class="ficon"></div><span>${n}</span></div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+  if(appId==='browser') return `
+    <div class="browser-bar">
+      <div class="browser-nav">‹ › ↻</div>
+      <div class="browser-url">🔒 aura-studio.example / preview</div>
+    </div>
+    <div class="browser-content">
+      <h1>Live Preview</h1>
+      <p>This window renders an embedded preview pane — perfect for showing client sites, staging builds, or documentation without leaving the desktop.</p>
+      <p style="opacity:0.5;font-size:12px;">(Preview panel — external sites aren't loaded here to keep the demo self-contained.)</p>
+    </div>`;
+  if(appId==='portfolio') return `
+    <div class="app-pad">
+      <canvas class="viewer-canvas" id="portfolioViewerCanvas"></canvas>
+      <p style="text-align:center;font-size:11.5px;opacity:0.55;margin-top:8px;">Drag to rotate the 3D piece</p>
+    </div>`;
+  if(appId==='payment') return `
+    <div class="app-pad">
+      <div class="pay-note">⚠️ Demo only — no real payment is processed or transmitted.</div>
+      <div class="card3d-wrap">
+        <div class="card3d">
+          <div class="row"><div class="chip"></div><div>AURA PAY</div></div>
+          <div class="num" id="osCardNum">•••• •••• •••• ••••</div>
+          <div class="row"><span id="osCardName">YOUR NAME</span><span id="osCardExp">MM/YY</span></div>
+        </div>
+      </div>
+      <div class="pay-field"><label>Card Number</label><input maxlength="19" placeholder="4242 4242 4242 4242" oninput="osUpdateCard('num',this.value)"></div>
+      <div class="pay-field"><label>Cardholder Name</label><input placeholder="Jordan Smith" oninput="osUpdateCard('name',this.value)"></div>
+      <div class="pay-field"><label>Expiry</label><input maxlength="5" placeholder="MM/YY" oninput="osUpdateCard('exp',this.value)"></div>
+      <button class="pay-btn" onclick="this.textContent='✓ Confirmed (Demo)'">Pay Now — $249.00</button>
+    </div>`;
+  return '';
+}
+
+function osUpdateCard(field, val){
+  if(field==='num'){
+    const digits = val.replace(/\D/g,'').padEnd(16,'•').slice(0,16);
+    document.getElementById('osCardNum').textContent = digits.match(/.{1,4}/g).join(' ');
+  }
+  if(field==='name') document.getElementById('osCardName').textContent = val.trim() ? val.toUpperCase() : 'YOUR NAME';
+  if(field==='exp') document.getElementById('osCardExp').textContent = val.trim() ? val : 'MM/YY';
+}
+
+/* ---------- Portfolio 3D viewer inside window ---------- */
+function initPortfolioViewer(){
+  const canvas = document.getElementById('portfolioViewerCanvas');
+  if(!canvas || canvas.dataset.inited) return;
+  canvas.dataset.inited = '1';
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(45,1,0.1,100);
+  camera.position.set(0,0,6);
+  scene.add(new THREE.HemisphereLight(0xffffff,0x222233,1.2));
+  const geo = new THREE.TorusKnotGeometry(1.3,0.42,120,16);
+  const mat = new THREE.MeshStandardMaterial({color:0x7C6CF5, flatShading:true, roughness:0.4});
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+  function resize(){ renderer.setSize(canvas.clientWidth, canvas.clientHeight); camera.aspect=canvas.clientWidth/canvas.clientHeight; camera.updateProjectionMatrix(); }
+  resize(); window.addEventListener('resize', resize);
+  let dragging=false, lastX=0, rotY=0.4;
+  canvas.addEventListener('pointerdown', e=>{dragging=true; lastX=e.clientX;});
+  window.addEventListener('pointerup', ()=>dragging=false);
+  window.addEventListener('pointermove', e=>{ if(dragging){ rotY += (e.clientX-lastX)*0.01; lastX=e.clientX; } });
+  (function loop(){ requestAnimationFrame(loop); if(!dragging) rotY+=0.006; mesh.rotation.y=rotY; mesh.rotation.x=0.3; renderer.render(scene,camera); })();
+}
+
+/* Open Finder by default to feel like a real desktop */
+openApp('finder');
+</script>
+
+</body>
+</html>
